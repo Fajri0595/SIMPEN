@@ -30,9 +30,19 @@
   function publicOf(d) {
     const J = Object.fromEntries(d.Jurnal.map(j => [j.id, j]));
     const row = s => { const j = J[s.id_jurnal] || {}; return { id: s.id, judul: s.judul, jurnal: j.nama || '-', indeks: j.akreditasi || j.indeks || '', link_jurnal: j.link || '', status: s.status, tgl_submit: s.tgl_submit, tgl_cek: s.tgl_cek, deadline_respon: s.deadline_respon, doi: s.doi, link_final: s.link_final, tahun_terbit: s.tahun_terbit }; };
-    const S = d.Submission.filter(s => s.tampil_publik);
+    const S = (d.Submission || []).filter(s => s.tampil_publik);
+    const P = (d.Penelitian || []).filter(p => p.tampil_publik).map(p => ({
+      id: p.id, judul: p.judul, bidang: p.bidang, kolaborator: p.kolaborator,
+      tanggal_mulai: p.tanggal_mulai, status: p.status, link_pdf: p.link_pdf || '', link_berkas: p.link_berkas || ''
+    }));
     const cf = (d.Pengaturan || [])[0] || {};
-    return { profil: { nama: cf.nama || 'Dr. Nama Dosen, M.Kom.', afiliasi: cf.afiliasi || 'Fakultas / Universitas (Mode Demo)' }, publikasi: S.filter(s => s.status === 'Published').map(row), proses: S.filter(s => PROSES.includes(s.status)).map(row), jurnal: d.Jurnal.filter(j => j.tampil_publik).map(({ catatan, ...j }) => j) };
+    return {
+      profil: { nama: cf.nama || 'Dr. Nama Dosen, M.Kom.', afiliasi: cf.afiliasi || 'Fakultas / Universitas (Mode Demo)' },
+      publikasi: S.filter(s => s.status === 'Published').map(row),
+      proses: S.filter(s => PROSES.includes(s.status)).map(row),
+      penelitian: P,
+      jurnal: (d.Jurnal || []).filter(j => j.tampil_publik).map(({ catatan, ...j }) => j)
+    };
   }
 
   async function demoPost(a, data) {

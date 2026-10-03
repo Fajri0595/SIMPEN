@@ -50,11 +50,16 @@
     let list = '';
     if (S.tab === 'pub') list = pubs.map(x => `<div class="card item"><div>${pubIdx(x.indeks)} <span class="bd sl">${esc(x.tahun_terbit)}</span></div><h3>${esc(x.judul)}</h3><div class="mu">${esc(x.jurnal)}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;flex-wrap:wrap"><span class="mono bd bl">${esc(x.doi || 'DOI belum tersedia')}</span>${(x.link_final || x.doi) ? `<a class="btn" href="${esc(x.link_final || 'https://doi.org/' + x.doi)}" target="_blank" rel="noopener">Buka Artikel / DOI ↗</a>` : ''}</div></div>`).join('') || '<div class="card mu">Belum ada publikasi yang ditampilkan.</div>';
     if (S.tab === 'proses') list = P.proses.filter(match).map(x => { const st = STAGE[x.status] || 2, dl = dayDiff(x.deadline_respon); return `<div class="card item"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div>${badge(x.status)} <b>${esc(x.jurnal)}</b> ${pubIdx(x.indeks)}</div>${x.link_jurnal ? `<a href="${esc(x.link_jurnal)}" target="_blank" rel="noopener">Buka Link Jurnal ↗</a>` : ''}</div><h3>${esc(x.judul)}</h3><div class="mu">Tanggal submit: ${fmt(x.tgl_submit)} · Terakhir diperbarui: ${fmt(x.tgl_cek)}${x.deadline_respon ? ` · Batas respon: ${fmt(x.deadline_respon)} ${dl != null ? pill(dl) : ''}` : ''}</div><div class="steps">${STEPS.map((_, i) => `<i class="${i < st - 1 ? 'd' : i === st - 1 ? 'c' : ''}"></i>`).join('')}</div><div class="mu" style="display:flex;justify-content:space-between;margin-top:6px"><span>${STEPS[st - 1]}</span><span>Tahap ${st} dari 6</span></div></div>`; }).join('') + `<div class="card mu" style="background:#EFF6FF">Catatan internal dan feedback reviewer tidak ditampilkan.</div>`;
+    if (S.tab === 'pen') {
+      const penList = (P.penelitian || []).filter(match);
+      list = penList.map(x => `<div class="card item"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><span class="bd ${x.status === 'Selesai' ? 'gr' : x.status === 'Berjalan' ? 'am' : 'sl'}">${esc(x.status)}</span> ${x.bidang ? `<span class="bd bl">${esc(x.bidang)}</span>` : ''}</div><div class="mu">${fmt(x.tanggal_mulai)}</div></div><h3 style="margin:10px 0 6px">${esc(x.judul)}</h3><div class="mu" style="font-size:13px"><b>Kolaborator / Tim:</b> ${esc(x.kolaborator || 'Mandiri')}</div>${(x.link_pdf || x.link_berkas) ? `<div style="display:flex;gap:8px;margin-top:12px">${x.link_pdf ? `<a class="btn sm" href="${esc(x.link_pdf)}" target="_blank" rel="noopener">📄 Naskah PDF ↗</a>` : ''}${x.link_berkas ? `<a class="btn sm" href="${esc(x.link_berkas)}" target="_blank" rel="noopener">📁 Berkas Riset ↗</a>` : ''}</div>` : ''}</div>`).join('') || '<div class="card mu">Belum ada riset/penelitian yang ditampilkan ke publik.</div>';
+    }
     if (S.tab === 'jur') list = pubKatalog(P, match);
+    const totPen = (P.penelitian || []).length;
     return `<header class="top"><div class="brand"><div class="logo">SP</div><div><b class="serif">SIMPEN</b><small>${esc(P.profil.nama)} · ${esc(P.profil.afiliasi)}</small></div></div><button class="btn pri" data-a="goLogin">Masuk Admin</button></header>
-    <div class="wrap">${S.tab === 'jur' ? '' : `<div class="stats"><div class="card stat"><span>Publikasi terbit</span><b>${P.publikasi.length}</b></div><div class="card stat"><span>Artikel dalam proses</span><b>${P.proses.length}</b></div><div class="card stat"><span>Katalog jurnal</span><b>${P.jurnal.length}</b></div></div>`}
-    <div class="tabs">${[['pub', 'Publikasi'], ['proses', 'Dalam Proses'], ['jur', 'Katalog Jurnal']].map(([k, l]) => `<button data-a="tab" data-id="${k}" class="${S.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-    ${S.tab === 'jur' ? '' : `<div class="card" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;background:#EFECFF"><input class="in" id="q" style="flex:1;min-width:200px" placeholder="Cari judul, jurnal, atau kata kunci…" value="${esc(S.q)}">${S.tab === 'pub' ? `<select id="yr" style="width:140px"><option value="">Semua tahun</option>${years.map(y => `<option ${y === S.yr ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div>`}${list}
+    <div class="wrap">${S.tab === 'jur' ? '' : `<div class="stats"><div class="card stat"><span>Publikasi terbit</span><b>${P.publikasi.length}</b></div><div class="card stat"><span>Artikel dalam proses</span><b>${P.proses.length}</b></div><div class="card stat"><span>Riset & Penelitian</span><b>${totPen}</b></div><div class="card stat"><span>Katalog jurnal</span><b>${P.jurnal.length}</b></div></div>`}
+    <div class="tabs">${[['pub', 'Publikasi Terbit'], ['proses', 'Dalam Proses'], ['pen', 'Riset & Penelitian'], ['jur', 'Katalog Jurnal']].map(([k, l]) => `<button data-a="tab" data-id="${k}" class="${S.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    ${S.tab === 'jur' ? '' : `<div class="card" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;background:#EFECFF"><input class="in" id="q" style="flex:1;min-width:200px" placeholder="Cari judul, kata kunci, kolaborator…" value="${esc(S.q)}">${S.tab === 'pub' ? `<select id="yr" style="width:140px"><option value="">Semua tahun</option>${years.map(y => `<option ${y === S.yr ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div>`}${list}
     <p class="mu" style="text-align:center;margin-top:32px">© ${new Date().getFullYear()} SIMPEN · Repositori penelitian dosen</p></div>`;
   }
   // Kartu katalog publik (mengikuti referensi): [PTN] ... [SINTA n] / nama / kampus / BIAYA (APC) | RUMPUN ILMU
@@ -102,7 +107,7 @@
     let acc = 0; const tot = D.Submission.length || 1; const cg = dist.map(([s, n]) => { const a = acc / tot * 360; acc += n; return `${COL[s]} ${a}deg ${acc / tot * 360}deg`; }).join(',');
     const jc = {}; D.Submission.forEach(s => { const n = jname(s.id_jurnal); jc[n] = (jc[n] || 0) + 1; }); const jt = Object.entries(jc).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const log = (D.Log || [])[0];
-    return head('Dashboard', 'Ringkasan kondisi penelitian dan publikasi Anda', `<button class="btn" data-a="add" data-e="Penelitian">+ Tambah Penelitian</button><button class="btn pri" data-a="add" data-e="Submission">+ Catat Submission</button>`) +
+    return head('Dashboard', 'Ringkasan kondisi penelitian dan publikasi Anda', `<button class="btn" data-a="pdfBkd">🖨️ Cetak Rekap BKD</button><button class="btn" data-a="add" data-e="Penelitian">+ Tambah Penelitian</button><button class="btn pri" data-a="add" data-e="Submission">+ Catat Submission</button>`) +
       `<div class="stats">${[['Total Penelitian', D.Penelitian.length], ['Dalam Proses', proses.length], ['Artikel Terbit', pub.length], ['Ditolak / Withdrawn', tol.length], ['CFP Aktif', D.CFP.filter(c => dayDiff(c.deadline) >= 0 && c.status !== 'Ditutup').length]].map(([l, n]) => `<div class="card stat"><span>${l}</span><b>${n}</b></div>`).join('')}</div>
     <h2 style="margin:8px 0 12px">Perlu Perhatian Segera</h2><div class="grid2"><div class="card"><h3>CFP Mendekati Deadline <span class="bd am">${cf.length}</span></h3>${cf.map(c => `<div class="row" style="display:block"><div style="display:flex;justify-content:space-between;gap:8px"><b class="serif" style="font-size:14px">${esc(c.nama)}</b>${pill(dayDiff(c.deadline))}</div><div class="mu">Batas submit: ${fmt(c.deadline)}</div><div style="margin-top:8px;display:flex;gap:8px"><button class="btn pri sm" data-a="cfp2sub" data-id="${c.id}">+ Jadikan Submission</button>${c.link ? `<a class="btn sm" style="line-height:30px" href="${esc(c.link)}" target="_blank" rel="noopener">Buka Tautan CFP</a>` : ''}</div></div>`).join('') || '<p class="mu">Tidak ada yang perlu perhatian.</p>'}</div>
     <div class="card"><h3>Submission Lama Tidak Dicek <span class="bd am">${pc.length}</span></h3>${pc.map(s => `<div class="row" style="display:block"><div style="display:flex;justify-content:space-between;gap:8px"><b class="serif" style="font-size:14px">${esc(s.judul)}</b><span class="bd am">Perlu dicek · ${-dayDiff(s.tgl_cek)} hari</span></div><div class="mu">Target: ${esc(jname(s.id_jurnal))}</div><div style="margin-top:8px;display:flex;gap:8px">${linkOf(s.id_jurnal, 'Buka Portal Jurnal')}<button class="btn pri sm" data-a="cek" data-id="${s.id}">✓ Sudah Saya Cek</button></div></div>`).join('') || '<p class="mu">Semua submission sudah dicek.</p>'}</div></div>
@@ -129,16 +134,16 @@
 
   function subCard(s) {
     const pc = perluCek(s), dl = dayDiff(s.deadline_respon);
-    return `<div class="card" style="padding:12px;margin-bottom:8px">${pc ? `<span class="bd am">⏱ Perlu dicek · ${-dayDiff(s.tgl_cek)} hari</span>` : ''}<h3 style="font-size:14px;margin:6px 0">${esc(s.judul)}</h3><div class="mu">${esc(jname(s.id_jurnal))}</div><div class="mu">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>${dl != null && PROSES.includes(s.status) ? `<div>Batas revisi ${pill(dl)}</div>` : ''}<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${linkOf(s.id_jurnal, 'Buka')}<button class="btn pri sm" data-a="cek" data-id="${s.id}">✓ Dicek</button><button class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}">Ubah</button></div><select data-a="chg" data-id="${s.id}" style="margin-top:8px;min-height:32px;font-size:12px">${STAT.map(x => `<option ${x === s.status ? 'selected' : ''}>${x}</option>`).join('')}</select></div>`;
+    return `<div class="card kanban-card" draggable="true" data-drag-id="${s.id}" style="padding:12px;margin-bottom:8px">${pc ? `<span class="bd am">⏱ Perlu dicek · ${-dayDiff(s.tgl_cek)} hari</span>` : ''}<h3 style="font-size:14px;margin:6px 0">${esc(s.judul)}</h3><div class="mu">${esc(jname(s.id_jurnal))}</div><div class="mu">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>${dl != null && PROSES.includes(s.status) ? `<div>Batas revisi ${pill(dl)}</div>` : ''}<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${linkOf(s.id_jurnal, 'Buka')}<button class="btn pri sm" data-a="cek" data-id="${s.id}">✓ Dicek</button><button class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}">Ubah</button></div><select data-a="chg" data-id="${s.id}" style="margin-top:8px;min-height:32px;font-size:12px">${STAT.map(x => `<option ${x === s.status ? 'selected' : ''}>${x}</option>`).join('')}</select></div>`;
   }
   function pSub() {
     let L = S.D.Submission; const q = S.q.toLowerCase();
     L = L.filter(s => (!q || (s.judul + jname(s.id_jurnal)).toLowerCase().includes(q)) && (!S.onlyCheck || perluCek(s)));
     const tgl = `<div class="card" style="padding:4px;display:flex"><button class="btn sm ${S.subv === 'kanban' ? 'pri' : ''}" data-a="subv" data-id="kanban">Kanban</button><button class="btn sm ${S.subv === 'tabel' ? 'pri' : ''}" data-a="subv" data-id="tabel">Tabel</button></div>`;
-    const body = S.subv === 'kanban' ? `<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px">${STAT.map(st => `<div style="min-width:270px;width:270px;background:var(--lav);border-radius:12px;padding:12px"><h3 style="margin-bottom:10px">${st} <span class="bd sl">${L.filter(s => s.status === st).length}</span></h3>${L.filter(s => s.status === st).map(subCard).join('')}</div>`).join('')}</div>`
+    const body = S.subv === 'kanban' ? `<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px">${STAT.map(st => `<div class="kanban-col" data-drop-status="${st}"><h3 style="margin-bottom:10px">${st} <span class="bd sl">${L.filter(s => s.status === st).length}</span></h3>${L.filter(s => s.status === st).map(subCard).join('')}</div>`).join('')}</div>`
       : `<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Naskah</th><th>Jurnal</th><th>Status</th><th>Submit</th><th>Cek terakhir</th><th>Aksi</th></tr></thead><tbody>${L.map(s => `<tr><td><b class="serif" style="font-size:14px">${esc(s.judul)}</b>${perluCek(s) ? '<div><span class="bd am">Perlu dicek</span></div>' : ''}</td><td>${esc(jname(s.id_jurnal))}</td><td>${badge(s.status)}</td><td>${fmt(s.tgl_submit)}</td><td>${fmt(s.tgl_cek)}</td><td style="white-space:nowrap">${linkOf(s.id_jurnal, 'Buka')} <button class="btn pri sm" data-a="cek" data-id="${s.id}">✓ Dicek</button> <button class="btn sm" data-a="hist" data-id="${s.id}">Riwayat</button> <button class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}">Ubah</button> <button class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}">Hapus</button></td></tr>`).join('')}</tbody></table></div>`;
     return head('Submission Tracker', 'Pantau naskah dari pengiriman hingga terbit', `${tgl}<button class="btn" data-a="csv" data-e="Submission">Ekspor Excel</button><button class="btn pri" data-a="add" data-e="Submission">+ Catat Submission Baru</button>`) +
-      `<div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px"><input class="in" id="q" style="flex:1;min-width:200px" placeholder="Cari judul naskah atau jurnal…" value="${esc(S.q)}"><label style="margin:0;font-weight:500"><input type="checkbox" id="oc" ${S.onlyCheck ? 'checked' : ''}> Hanya yang perlu dicek</label></div>${body}<p class="mu">Ubah status lewat dropdown di kartu. Setiap perubahan tercatat di riwayat status.</p>`;
+      `<div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px"><input class="in" id="q" style="flex:1;min-width:200px" placeholder="Cari judul naskah atau jurnal…" value="${esc(S.q)}"><label style="margin:0;font-weight:500"><input type="checkbox" id="oc" ${S.onlyCheck ? 'checked' : ''}> Hanya yang perlu dicek</label></div>${body}<p class="mu">💡 Tarik & letakkan (drag-and-drop) kartu naskah ke kolom lain, atau pilih status lewat dropdown di kartu. Riwayat status tercatat otomatis.</p>`;
   }
 
   function pCfp() {
@@ -202,6 +207,48 @@
     const t = [k.join(','), ...L.map(r => k.map(x => '"' + String(r[x] ?? '').replace(/"/g, '""') + '"').join(','))].join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv' })); a.download = `SIMPEN-${ent}-${today()}.csv`; a.click();
   }
+  function exportBKD() {
+    const D = S.D; if (!D) return;
+    const c = (D.Pengaturan || [])[0] || {};
+    const win = window.open('', '_blank');
+    if (!win) return toast('Pop-up terblokir di browser Anda', true);
+    const pens = D.Penelitian || [], subs = D.Submission || [], J = Object.fromEntries((D.Jurnal || []).map(j => [j.id, j]));
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Rekapitulasi BKD - ${esc(c.nama || 'Dosen')}</title>
+    <style>
+      body{font-family:Arial,sans-serif;color:#111;padding:32px;line-height:1.5;max-width:900px;margin:auto}
+      h1{font-size:20px;margin:0 0 4px;text-align:center;text-transform:uppercase}
+      h2{font-size:14px;margin:0 0 16px;text-align:center;color:#475569;font-weight:normal}
+      .meta{border:1px solid #cbd5e1;padding:12px;border-radius:6px;margin-bottom:24px;font-size:13px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+      table{width:100%;border-collapse:collapse;margin-bottom:24px;font-size:12px}
+      th,td{border:1px solid #94a3b8;padding:8px;text-align:left;vertical-align:top}
+      th{background:#f1f5f9;font-weight:bold}
+      .badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:bold;background:#e2e8f0}
+      .sec-title{font-size:15px;font-weight:bold;margin:16px 0 8px;border-bottom:2px solid #1e3a5f;padding-bottom:4px;color:#1e3a5f}
+      @media print{button{display:none}body{padding:0}}
+    </style></head><body>
+    <div style="text-align:right;margin-bottom:12px"><button onclick="window.print()" style="padding:8px 16px;cursor:pointer;background:#1e3a5f;color:#fff;border:none;border-radius:4px;font-weight:bold">🖨️ Cetak / Simpan PDF</button></div>
+    <h1>Rekapitulasi Penelitian & Publikasi Ilmiah</h1>
+    <h2>Laporan Kinerja Dosen / BKD · Dicetak pada ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
+    <div class="meta">
+      <div><b>Nama Dosen:</b> ${esc(c.nama || '—')}</div>
+      <div><b>Afiliasi:</b> ${esc(c.afiliasi || '—')}</div>
+      <div><b>Total Penelitian:</b> ${pens.length} Judul</div>
+      <div><b>Total Publikasi/Artikel:</b> ${subs.length} Naskah</div>
+    </div>
+    <div class="sec-title">A. Data Penelitian & Riset</div>
+    <table>
+      <thead><tr><th style="width:30px">No</th><th>Judul Penelitian</th><th>Bidang Ilmu</th><th>Kolaborator</th><th>Mulai</th><th>Status</th></tr></thead>
+      <tbody>${pens.map((p, i) => `<tr><td style="text-align:center">${i + 1}</td><td><b>${esc(p.judul)}</b></td><td>${esc(p.bidang || '—')}</td><td>${esc(p.kolaborator || 'Mandiri')}</td><td>${fmt(p.tanggal_mulai)}</td><td>${esc(p.status)}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada data penelitian</td></tr>'}</tbody>
+    </table>
+    <div class="sec-title">B. Data Submission & Publikasi Artikel Ilmiah</div>
+    <table>
+      <thead><tr><th style="width:30px">No</th><th>Judul Artikel</th><th>Jurnal Sasaran / Akreditasi</th><th>Status</th><th>Tahun</th><th>DOI / Tautan</th></tr></thead>
+      <tbody>${subs.map((s, i) => { const j = J[s.id_jurnal] || {}; return `<tr><td style="text-align:center">${i + 1}</td><td><b>${esc(s.judul)}</b></td><td>${esc(j.nama || '—')}<br><small>${esc(akr(j))}</small></td><td><span class="badge">${esc(s.status)}</span></td><td>${esc(s.tahun_terbit || '—')}</td><td style="word-break:break-all">${esc(s.doi || s.link_final || '—')}</td></tr>`; }).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada data publikasi</td></tr>'}</tbody>
+    </table>
+    </body></html>`;
+    win.document.write(html);
+    win.document.close();
+  }
 
   // ============ RENDER & EVENTS ============
   function draw() {
@@ -225,13 +272,14 @@
     else if (a === 'resetf') { S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; S.q = ''; draw(); }
     else if (a === 'logout') { API.post('logout'); API.setTok(null); S.view = 'pub'; S.D = null; loadPub(); }
     else if (a === 'mclose') closeModal();
-    else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', tgl_cek: today() } : { tampil_publik: false });
+    else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', tgl_cek: today(), tampil_publik: true } : { tampil_publik: true });
     else if (a === 'edit') openForm(ent, S.D[ent].find(x => x.id === id));
     else if (a === 'del') { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) remove(ent, id); }
     else if (a === 'delOld') { const o = S.D.CFP.filter(c => dayDiff(c.deadline) < 0); if (confirm(`Hapus ${o.length} CFP yang sudah lewat?`)) for (const c of o) await remove('CFP', c.id); }
     else if (a === 'cek') { const s = S.D.Submission.find(x => x.id === id); upsert('Submission', { ...s, tgl_cek: today() }); toast('Ditandai sudah dicek'); }
     else if (a === 'cfp2sub') { const c = S.D.CFP.find(x => x.id === id); S.page = 'sub'; openForm('Submission', { status: 'Draft', id_jurnal: c.id_jurnal, tgl_cek: today() }); }
     else if (a === 'csv') csv(ent);
+    else if (a === 'pdfBkd') exportBKD();
     else if (a === 'hist') { const h = (S.D.StatusLog || []).filter(x => x.id_submission === id); openModal(`<div class="ov"><div class="mod"><h2>Riwayat Status</h2>${h.map(x => `<div class="row"><span>${badge(x.status_lama)} → ${badge(x.status_baru)}</span><span class="mono">${esc(x.waktu)}</span></div>`).join('') || '<p class="mu">Belum ada perubahan status.</p>'}<div class="act"><button class="btn" data-a="mclose">Tutup</button></div></div></div>`); }
     else if (a === 'thumb') { const u = $('#mf [name=link]').value; if (!u) return toast('Isi tautan jurnal dulu', true); t.textContent = 'Mengambil…'; const r = await API.post('thumb', { url: u }); t.textContent = 'Ambil Thumbnail Otomatis'; if (r.success) { $('#mf [name=thumbnail]').value = r.thumbnail; toast('Thumbnail berhasil diambil'); } else toast(r.message || 'Thumbnail tidak ditemukan', true); }
     else if (a === 'testwa') { const r = await API.post('testwa'); toast(r.message || (r.success ? 'Pesan uji terkirim' : 'Gagal'), !r.success); }
@@ -243,6 +291,47 @@
     else if (t.id === 'yr') { S.yr = t.value; draw(); } else if (t.id === 'jb') { S.jbiaya = t.value; draw(); } else if (t.id === 'oc') { S.onlyCheck = t.checked; draw(); }
   });
   let tm; document.addEventListener('input', e => { const t = e.target; if (t.id === 'q' || t.id === 'jq') { clearTimeout(tm); tm = setTimeout(() => { t.id === 'q' ? S.q = t.value : S.jq = t.value; draw(); }, 250); } });
+
+  // Drag and drop Kanban
+  let draggedSubId = null;
+  document.addEventListener('dragstart', e => {
+    const card = e.target.closest('[data-drag-id]');
+    if (!card) return;
+    draggedSubId = card.dataset.dragId;
+    card.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', draggedSubId);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  document.addEventListener('dragend', e => {
+    const card = e.target.closest('[data-drag-id]');
+    if (card) card.classList.remove('dragging');
+    document.querySelectorAll('.kanban-col.drag-over').forEach(c => c.classList.remove('drag-over'));
+    draggedSubId = null;
+  });
+  document.addEventListener('dragover', e => {
+    const col = e.target.closest('[data-drop-status]');
+    if (!col || !draggedSubId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    col.classList.add('drag-over');
+  });
+  document.addEventListener('dragleave', e => {
+    const col = e.target.closest('[data-drop-status]');
+    if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+  });
+  document.addEventListener('drop', e => {
+    const col = e.target.closest('[data-drop-status]');
+    if (!col || !draggedSubId) return;
+    e.preventDefault();
+    col.classList.remove('drag-over');
+    const newStatus = col.dataset.dropStatus;
+    const sub = (S.D?.Submission || []).find(x => x.id === draggedSubId);
+    if (sub && sub.status !== newStatus) {
+      upsert('Submission', { ...sub, status: newStatus, tgl_cek: today() });
+      toast('Status naskah diubah ke ' + newStatus);
+    }
+    draggedSubId = null;
+  });
   document.addEventListener('submit', async e => {
     e.preventDefault(); const f = e.target;
     if (f.id === 'lf') { const b = f.querySelector('button'); b.disabled = true; b.textContent = 'Memeriksa…'; const r = await API.post('login', { password: $('#pw').value }); if (r.success) { API.setTok(r.token); S.view = 'admin'; S.page = 'dash'; S.D = null; draw(); loadAdmin(); } else { b.disabled = false; b.textContent = 'Masuk ke Panel Pengelola'; $('#le').textContent = r.message || 'Gagal masuk.'; } }
