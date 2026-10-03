@@ -873,6 +873,12 @@ tr:hover td {
   transition: var(--trans);
   box-shadow: var(--sh-xs);
   min-height: 250px;
+  cursor: pointer;
+  outline: none;
+}
+.jc:focus-visible {
+  border-color: var(--pri);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 .jc:hover {
   border-color: var(--bd-hover);
@@ -1032,6 +1038,24 @@ tr:hover td {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 90%;
+}
+
+/* Journal Detail Modal */
+.j-detail-metric {
+  background: var(--surface-alt);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.j-detail-scope-box {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  margin-top: 14px;
 }
 
 /* Kanban Board */

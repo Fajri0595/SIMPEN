@@ -269,7 +269,7 @@
 
     if (S.jview === 'list') {
       return `
-        <a class="card jc jl" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal: ${esc(j.nama)}">
+        <div class="card jc jl" data-a="jdetail" data-id="${esc(j.id)}" role="button" tabindex="0" title="Klik untuk rincian: ${esc(j.nama)}">
           <div class="jc-cover-list">
             ${thumb(j, '100%', '100%')}
           </div>
@@ -292,12 +292,12 @@
               <b style="font-size:13.5px">${rum}</b>
             </div>
           </div>
-        </a>
+        </div>
       `;
     }
 
     return `
-      <a class="card jc" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal: ${esc(j.nama)}">
+      <div class="card jc" data-a="jdetail" data-id="${esc(j.id)}" role="button" tabindex="0" title="Klik untuk rincian: ${esc(j.nama)}">
         <div class="jc-header">
           <div class="jc-cover-box">
             ${thumb(j, '100%', '100%')}
@@ -322,8 +322,69 @@
             <b style="font-size:13.5px">${rum}</b>
           </div>
         </div>
-      </a>
+      </div>
     `;
+  }
+
+  // Modal rincian katalog jurnal publik (Focus & Scope, Metrik, Link Resmi)
+  function openJournalDetail(j) {
+    const v = apcVal(j), rum = esc(j.rumpun_ilmu || '—');
+    const kampus = esc(j.jenis_kampus || 'PTN');
+    const scope = esc(j.scope || 'Belum ada rincian fokus dan ruang lingkup (focus & scope) untuk jurnal ini.');
+
+    openModal(`
+      <div class="ov" data-a="mclose">
+        <div class="mod" onclick="event.stopPropagation()" style="max-width:580px;padding:26px 28px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:20px">
+            <div style="display:flex;gap:16px;align-items:flex-start">
+              <div class="jc-cover-box" style="width:72px;height:96px;flex-shrink:0">
+                ${thumb(j, '100%', '100%')}
+              </div>
+              <div style="flex:1;min-width:0">
+                <h2 style="font-size:18px;line-height:1.35;margin:0 0 6px;color:var(--tx);font-weight:700">${esc(j.nama)}</h2>
+                <div style="display:flex;align-items:center;gap:6px;color:var(--pri);font-size:13px;font-weight:600">
+                  ${SVG.bld} <span>${esc(j.penerbit || '—')}</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn sm" data-a="mclose" aria-label="Tutup" style="padding:4px 8px;font-size:16px;line-height:1;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;color:var(--mu);cursor:pointer">✕</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+            <div class="j-detail-metric">
+              <div class="lbl">STATUS INSTITUSI</div>
+              <b style="font-size:14.5px;color:var(--tx);margin-top:2px">${kampus}</b>
+            </div>
+            <div class="j-detail-metric">
+              <div class="lbl">AKREDITASI</div>
+              <div style="margin-top:2px">${akrBadge(j)}</div>
+            </div>
+            <div class="j-detail-metric">
+              <div class="lbl">ESTIMASI BIAYA</div>
+              <b style="font-size:14.5px;color:${v.c};margin-top:2px">${esc(v.t)}</b>
+            </div>
+            <div class="j-detail-metric">
+              <div class="lbl">RUMPUN ILMU</div>
+              <b style="font-size:14.5px;color:var(--tx);margin-top:2px">${rum}</b>
+            </div>
+          </div>
+
+          <div class="j-detail-scope-box">
+            <div style="font-weight:700;font-size:13.5px;color:#1E40AF;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+              ${SVG.book} <span>Focus &amp; Scope</span>
+            </div>
+            <div style="font-size:13px;line-height:1.6;color:var(--tx-sec);max-height:200px;overflow-y:auto;white-space:pre-line;padding-right:4px">${scope}</div>
+          </div>
+
+          <div class="act" style="margin-top:22px;display:flex;justify-content:flex-end;gap:10px">
+            <button type="button" class="btn" data-a="mclose">Tutup</button>
+            <a href="${esc(j.link)}" target="_blank" rel="noopener" class="btn pri" style="display:inline-flex;align-items:center;gap:6px">
+              ${SVG.ext} Kunjungi Web
+            </a>
+          </div>
+        </div>
+      </div>
+    `);
   }
 
   function pubKatalog(P, match) {
@@ -1052,6 +1113,10 @@
     else if (a === 'resetf') { S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; S.q = ''; draw(); }
     else if (a === 'logout') { API.post('logout'); API.setTok(null); S.view = 'pub'; S.D = null; loadPub(); }
     else if (a === 'mclose') closeModal();
+    else if (a === 'jdetail') {
+      const j = (S.P?.jurnal || S.D?.Jurnal || []).find(x => String(x.id) === String(id) || x.nama === id);
+      if (j) openJournalDetail(j);
+    }
     else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', tgl_cek: today(), tampil_publik: true } : { tampil_publik: true });
     else if (a === 'edit') openForm(ent, S.D[ent].find(x => x.id === id));
     else if (a === 'del') { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) remove(ent, id); }
@@ -1181,6 +1246,15 @@
     else if (f.id === 'sf') {
       const o = Object.fromEntries(new FormData(f)); const cur = (S.D.Pengaturan || [])[0] || { id: 'cfg' };
       await upsert('Pengaturan', { ...cur, ...o, id: 'cfg' }); toast('Pengaturan berhasil diperbarui');
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.dataset && e.target.dataset.a === 'jdetail') {
+      e.preventDefault();
+      const j = (S.P?.jurnal || S.D?.Jurnal || []).find(x => String(x.id) === String(e.target.dataset.id) || x.nama === e.target.dataset.id);
+      if (j) openJournalDetail(j);
     }
   });
 
