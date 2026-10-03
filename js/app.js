@@ -64,9 +64,24 @@
     return { t: /^\d+$/.test(n) ? 'Rp ' + Number(n).toLocaleString('id-ID') : (j.apc || 'Berbayar'), c: '#1E3A8A' };
   };
   const thumb = (j, w, h) => {
-    const ini = esc((j.nama || '?').slice(0, 3).toUpperCase());
-    const box = `<div class="logo" style="width:${w};height:${h};border-radius:10px;font-size:16px">${ini}</div>`;
-    return j.thumbnail ? `<img src="${esc(j.thumbnail)}" alt="" style="width:${w};height:${h};object-fit:cover;border-radius:10px;border:1px solid var(--bd)" onerror="this.outerHTML=this.dataset.fb" data-fb="${box.replace(/"/g, '&quot;')}">` : box;
+    const ini = esc((j.nama || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 3).join('').toUpperCase() || 'JUR');
+    const pub = esc(j.penerbit || 'Jurnal');
+    const akreditasi = akr(j);
+    const box = `<div class="journal-cover-placeholder" style="width:100%;height:100%">
+      <span class="jcp-badge">${akreditasi}</span>
+      <b class="jcp-title">${ini}</b>
+      <small class="jcp-sub">${pub}</small>
+    </div>`;
+
+    const hasThumb = j.thumbnail && String(j.thumbnail).trim().length > 10;
+    return `
+      <div class="journal-cover-wrap" style="width:${w};height:${h}">
+        ${hasThumb ? `
+          <img src="${esc(String(j.thumbnail).trim())}" alt="${esc(j.nama)}" class="journal-cover-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div style="display:none;width:100%;height:100%">${box}</div>
+        ` : box}
+      </div>
+    `;
   };
   function toast(m, err) {
     const t = $('#toast'), d = document.createElement('div');
@@ -235,10 +250,63 @@
   // Kartu katalog publik
   function jPub(j) {
     const v = apcVal(j), rum = esc(j.rumpun_ilmu || '—');
-    const top = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>${akrBadge(j)}</div>`;
-    const bottom = `<div style="display:flex;justify-content:space-between;gap:12px;padding-top:14px;border-top:1px solid var(--bd);margin-top:14px"><div><div class="lbl">Biaya (APC)</div><b style="color:${v.c}">${esc(v.t)}</b></div><div style="text-align:right"><div class="lbl">Rumpun Ilmu</div><b>${rum}</b></div></div>`;
-    if (S.jview === 'list') return `<a class="card jc jl" href="${esc(j.link)}" target="_blank" rel="noopener"><div style="flex:1;min-width:240px">${top}<h3 class="jn">${esc(j.nama)}</h3><div class="mu kp">${SVG.bld} ${esc(j.penerbit || '—')}</div><div class="mu sc">${esc(j.scope)}</div></div><div style="min-width:220px;align-self:center">${bottom.replace('padding-top:14px;border-top:1px solid var(--bd);margin-top:14px', '')}</div></a>`;
-    return `<a class="card jc" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal">${top}<h3 class="jn">${esc(j.nama)}</h3><div class="mu kp">${SVG.bld} ${esc(j.penerbit || '—')}</div>${bottom}</a>`;
+    const topBadges = `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
+      <span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>
+      ${akrBadge(j)}
+    </div>`;
+    const bottom = `<div style="display:flex;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid var(--bd);margin-top:auto">
+      <div>
+        <div class="lbl">Biaya (APC)</div>
+        <b style="color:${v.c};font-size:13px">${esc(v.t)}</b>
+      </div>
+      <div style="text-align:right">
+        <div class="lbl">Rumpun Ilmu</div>
+        <b style="font-size:13px">${rum}</b>
+      </div>
+    </div>`;
+
+    if (S.jview === 'list') {
+      return `
+        <a class="card jc jl" href="${esc(j.link)}" target="_blank" rel="noopener">
+          <div class="jc-cover" style="flex:none">
+            ${thumb(j, '76px', '100px')}
+          </div>
+          <div style="flex:1;min-width:240px">
+            ${topBadges}
+            <h3 class="jn" style="margin:0 0 4px;font-size:16px">${esc(j.nama)}</h3>
+            <div class="mu kp" style="font-size:12.5px">${SVG.bld} ${esc(j.penerbit || '—')}</div>
+            <div class="mu sc" style="font-size:13px;margin-top:6px">${esc(j.scope)}</div>
+          </div>
+          <div style="min-width:200px;align-self:center;padding-left:16px;border-left:1px solid var(--bd)">
+            <div style="margin-bottom:8px">
+              <div class="lbl">Biaya (APC)</div>
+              <b style="color:${v.c};font-size:14px">${esc(v.t)}</b>
+            </div>
+            <div>
+              <div class="lbl">Rumpun Ilmu</div>
+              <b style="font-size:13.5px">${rum}</b>
+            </div>
+          </div>
+        </a>
+      `;
+    }
+
+    return `
+      <a class="card jc" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal">
+        <div class="jc-header">
+          <div class="jc-cover">
+            ${thumb(j, '68px', '90px')}
+          </div>
+          <div class="jc-main-info">
+            ${topBadges}
+            <h3 class="jn" style="margin:0 0 4px;font-size:15px;line-height:1.3">${esc(j.nama)}</h3>
+            <div class="mu kp" style="font-size:12px">${SVG.bld} ${esc(j.penerbit || '—')}</div>
+          </div>
+        </div>
+        <div class="mu sc" style="font-size:12.5px;margin:8px 0 14px">${esc(j.scope)}</div>
+        ${bottom}
+      </a>
+    `;
   }
 
   function pubKatalog(P, match) {
@@ -570,7 +638,7 @@
         const v = apcVal(j);
         return `
           <div class="card item" style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-            <div style="width:120px;flex:none">${thumb(j, '120px', '80px')}</div>
+            <div style="width:84px;flex:none">${thumb(j, '84px', '112px')}</div>
             <div style="flex:1;min-width:260px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <span class="mu" style="font-size:12px;font-weight:600">${esc(j.penerbit || '—')}</span>
