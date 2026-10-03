@@ -12,13 +12,30 @@
   const STAGE = { Submitted: 2, 'Under Review': 3, 'Revision Requested': 4, Resubmitted: 4, Accepted: 5 };
   const STEPS = ['Drafting', 'Submitted', 'Under Review', 'Revision', 'Accepted', 'Published'];
   const badge = s => `<span class="bd ${STC[s] || 'sl'}">${esc(s)}</span>`;
-  const S = { view: 'pub', tab: 'pub', page: 'dash', P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, modal: null };
+  const S = { view: 'pub', tab: 'pub', page: 'dash', P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid' };
 
   const cfg = () => Object.assign({ nama: '', afiliasi: '', wa: '', ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00' }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
   const jname = id => ((S.D?.Jurnal || []).find(j => j.id === id) || {}).nama || '—';
   const perluCek = s => PROSES.includes(s.status) && s.tgl_cek && -dayDiff(s.tgl_cek) > Number(cfg().ambang_cek);
   const cfpNear = c => c.status !== 'Sudah Submit' && c.status !== 'Ditutup' && dayDiff(c.deadline) >= 0 && dayDiff(c.deadline) <= 7;
 
+  // Modal hidup di wadah #modal sendiri → tidak ikut tergambar ulang & tidak menutup saat klik di luar.
+  const openModal = html => { $('#modal').innerHTML = html; const f = $('#modal input,#modal textarea,#modal select'); if (f) f.focus(); };
+  const closeModal = () => { $('#modal').innerHTML = ''; };
+
+  // ---- Katalog jurnal: akreditasi, kampus, biaya ----
+  const AKR = ['Sinta 1', 'Sinta 2', 'Sinta 3', 'Sinta 4', 'Non-Sinta'];
+  const KAMPUS = ['PTN', 'PTS', 'Lainnya'];
+  // data lama (kolom "indeks" teks bebas) tetap terbaca: "Sinta 2" → Sinta 2; selain Sinta 1–4 → Non-Sinta
+  const akr = j => { const m = String((j && (j.akreditasi || j.indeks)) || '').match(/sinta\s*([1-4])\b/i); return m ? 'Sinta ' + m[1] : 'Non-Sinta'; };
+  const AKC = { 'Sinta 1': 'am', 'Sinta 2': 'bl', 'Sinta 3': 'ix', 'Sinta 4': 'gr', 'Non-Sinta': 'sl' };
+  const akrBadge = j => `<span class="bd ${AKC[akr(j)]}" style="text-transform:uppercase;font-size:11px">${akr(j)}</span>`;
+  const apcVal = j => {
+    if (j.tipe_biaya === 'Gratis') return { t: 'Gratis', c: '#047857' };
+    const n = String(j.apc || '').replace(/[.\s]/g, '');
+    return { t: /^\d+$/.test(n) ? 'Rp ' + Number(n).toLocaleString('id-ID') : (j.apc || 'Berbayar'), c: '#1E3A5F' };
+  };
+  const thumb = (j, w, h) => { const ini = esc((j.nama || '?').slice(0, 3).toUpperCase()); const box = `<div class="logo" style="width:${w};height:${h};border-radius:8px;font-size:22px">${ini}</div>`; return j.thumbnail ? `<img src="${esc(j.thumbnail)}" alt="" style="width:${w};height:${h};object-fit:cover;border-radius:8px" onerror="this.outerHTML=this.dataset.fb" data-fb="${box.replace(/"/g, '&quot;')}">` : box; };
   function toast(m, err) { const t = $('#toast'), d = document.createElement('div'); d.textContent = m; if (err) d.className = 'e'; t.appendChild(d); setTimeout(() => d.remove(), 3500); }
   const pill = n => n < 0 ? `<span class="bd sl">Lewat</span>` : `<span class="bd ${n <= 3 ? 'rs' : n <= 7 ? 'am' : 'sl'}">${n === 0 ? 'Hari-H' : 'H-' + n}</span>`;
 
@@ -33,16 +50,32 @@
     let list = '';
     if (S.tab === 'pub') list = pubs.map(x => `<div class="card item"><div>${pubIdx(x.indeks)} <span class="bd sl">${esc(x.tahun_terbit)}</span></div><h3>${esc(x.judul)}</h3><div class="mu">${esc(x.jurnal)}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;flex-wrap:wrap"><span class="mono bd bl">${esc(x.doi || 'DOI belum tersedia')}</span>${(x.link_final || x.doi) ? `<a class="btn" href="${esc(x.link_final || 'https://doi.org/' + x.doi)}" target="_blank" rel="noopener">Buka Artikel / DOI ↗</a>` : ''}</div></div>`).join('') || '<div class="card mu">Belum ada publikasi yang ditampilkan.</div>';
     if (S.tab === 'proses') list = P.proses.filter(match).map(x => { const st = STAGE[x.status] || 2, dl = dayDiff(x.deadline_respon); return `<div class="card item"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div>${badge(x.status)} <b>${esc(x.jurnal)}</b> ${pubIdx(x.indeks)}</div>${x.link_jurnal ? `<a href="${esc(x.link_jurnal)}" target="_blank" rel="noopener">Buka Link Jurnal ↗</a>` : ''}</div><h3>${esc(x.judul)}</h3><div class="mu">Tanggal submit: ${fmt(x.tgl_submit)} · Terakhir diperbarui: ${fmt(x.tgl_cek)}${x.deadline_respon ? ` · Batas respon: ${fmt(x.deadline_respon)} ${dl != null ? pill(dl) : ''}` : ''}</div><div class="steps">${STEPS.map((_, i) => `<i class="${i < st - 1 ? 'd' : i === st - 1 ? 'c' : ''}"></i>`).join('')}</div><div class="mu" style="display:flex;justify-content:space-between;margin-top:6px"><span>${STEPS[st - 1]}</span><span>Tahap ${st} dari 6</span></div></div>`; }).join('') + `<div class="card mu" style="background:#EFF6FF">Catatan internal dan feedback reviewer tidak ditampilkan.</div>`;
-    if (S.tab === 'jur') list = `<div class="stats">${P.jurnal.filter(match).filter(j => !S.jbiaya || (S.jbiaya === 'g' ? j.tipe_biaya === 'Gratis' : j.tipe_biaya !== 'Gratis')).map(jCard).join('')}</div>`;
+    if (S.tab === 'jur') list = pubKatalog(P, match);
     return `<header class="top"><div class="brand"><div class="logo">SP</div><div><b class="serif">SIMPEN</b><small>${esc(P.profil.nama)} · ${esc(P.profil.afiliasi)}</small></div></div><button class="btn pri" data-a="goLogin">Masuk Admin</button></header>
-    <div class="wrap"><div class="stats"><div class="card stat"><span>Publikasi terbit</span><b>${P.publikasi.length}</b></div><div class="card stat"><span>Artikel dalam proses</span><b>${P.proses.length}</b></div><div class="card stat"><span>Katalog jurnal</span><b>${P.jurnal.length}</b></div></div>
+    <div class="wrap">${S.tab === 'jur' ? '' : `<div class="stats"><div class="card stat"><span>Publikasi terbit</span><b>${P.publikasi.length}</b></div><div class="card stat"><span>Artikel dalam proses</span><b>${P.proses.length}</b></div><div class="card stat"><span>Katalog jurnal</span><b>${P.jurnal.length}</b></div></div>`}
     <div class="tabs">${[['pub', 'Publikasi'], ['proses', 'Dalam Proses'], ['jur', 'Katalog Jurnal']].map(([k, l]) => `<button data-a="tab" data-id="${k}" class="${S.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-    <div class="card" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;background:#EFECFF"><input class="in" id="q" style="flex:1;min-width:200px" placeholder="Cari judul, jurnal, atau kata kunci…" value="${esc(S.q)}">${S.tab === 'pub' ? `<select id="yr" style="width:140px"><option value="">Semua tahun</option>${years.map(y => `<option ${y === S.yr ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}${S.tab === 'jur' ? `<select id="jb" style="width:160px"><option value="">Semua biaya</option><option value="g" ${S.jbiaya === 'g' ? 'selected' : ''}>Gratis</option><option value="b" ${S.jbiaya === 'b' ? 'selected' : ''}>Berbayar (APC)</option></select>` : ''}</div>${list}
+    ${S.tab === 'jur' ? '' : `<div class="card" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;background:#EFECFF"><input class="in" id="q" style="flex:1;min-width:200px" placeholder="Cari judul, jurnal, atau kata kunci…" value="${esc(S.q)}">${S.tab === 'pub' ? `<select id="yr" style="width:140px"><option value="">Semua tahun</option>${years.map(y => `<option ${y === S.yr ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div>`}${list}
     <p class="mu" style="text-align:center;margin-top:32px">© ${new Date().getFullYear()} SIMPEN · Repositori penelitian dosen</p></div>`;
   }
-  function jCard(j) {
-    const th = j.thumbnail ? `<img src="${esc(j.thumbnail)}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px 8px 0 0" onerror="this.outerHTML='<div class=&quot;logo&quot; style=&quot;width:100%;height:120px;border-radius:8px 8px 0 0;font-size:28px&quot;>${esc((j.nama || '?').slice(0, 3).toUpperCase())}</div>'">` : `<div class="logo" style="width:100%;height:120px;border-radius:8px 8px 0 0;font-size:28px">${esc((j.nama || '?').slice(0, 3).toUpperCase())}</div>`;
-    return `<div class="card" style="padding:0;overflow:hidden">${th}<div style="padding:16px"><div class="mu" style="font-size:11px;text-transform:uppercase">${esc(j.penerbit)}</div><h3 style="margin:4px 0 8px">${esc(j.nama)}</h3><span class="bd ${j.tipe_biaya === 'Gratis' ? 'gr' : 'am'}">${j.tipe_biaya === 'Gratis' ? 'Gratis' : 'APC ' + esc(j.apc)}</span> ${j.indeks ? `<span class="bd nv">${esc(j.indeks)}</span>` : ''}<div class="mu" style="margin:10px 0">IF: <b>${esc(j.impact_factor || '—')}</b> · Review: <b>${esc(j.waktu_review || '—')}</b></div><div class="mu" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(j.scope)}</div><a class="btn" style="display:block;text-align:center;margin-top:12px;line-height:38px" href="${esc(j.link)}" target="_blank" rel="noopener">Buka Jurnal ↗</a></div></div>`;
+  // Kartu katalog publik (mengikuti referensi): [PTN] ... [SINTA n] / nama / kampus / BIAYA (APC) | RUMPUN ILMU
+  const BLD = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V5l7-2 7 2v16M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4"/></svg>';
+  function jPub(j) {
+    const v = apcVal(j), rum = esc(j.rumpun_ilmu || '—');
+    const top = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>${akrBadge(j)}</div>`;
+    const bottom = `<div style="display:flex;justify-content:space-between;gap:12px;padding-top:14px;border-top:1px solid var(--bd);margin-top:14px"><div><div class="lbl">Biaya (APC)</div><b style="color:${v.c}">${esc(v.t)}</b></div><div style="text-align:right"><div class="lbl">Rumpun Ilmu</div><b>${rum}</b></div></div>`;
+    if (S.jview === 'list') return `<a class="card jc jl" href="${esc(j.link)}" target="_blank" rel="noopener"><div style="flex:1;min-width:240px">${top}<h3 class="jn">${esc(j.nama)}</h3><div class="mu kp">${BLD} ${esc(j.penerbit || '—')}</div><div class="mu sc">${esc(j.scope)}</div></div><div style="min-width:220px;align-self:center">${bottom.replace('padding-top:14px;border-top:1px solid var(--bd);margin-top:14px', '')}</div></a>`;
+    return `<a class="card jc" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal">${top}<h3 class="jn">${esc(j.nama)}</h3><div class="mu kp">${BLD} ${esc(j.penerbit || '—')}</div>${bottom}</a>`;
+  }
+  function pubKatalog(P, match) {
+    const f = S.f, J = P.jurnal;
+    const rum = [...new Set(J.map(x => x.rumpun_ilmu).filter(Boolean))].sort();
+    const L = J.filter(j => (!f.kampus || (j.jenis_kampus || 'PTN') === f.kampus) && (!f.akr || akr(j) === f.akr) && (!f.biaya || (f.biaya === 'g' ? j.tipe_biaya === 'Gratis' : j.tipe_biaya !== 'Gratis')) && (!f.rumpun || j.rumpun_ilmu === f.rumpun) && match(j));
+    const sel = (id, lab, opts, cur) => `<div><div class="lbl" style="margin-bottom:6px">${lab}</div><select id="f_${id}">${opts.map(([v, t]) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>`;
+    const kap = x => (x.jenis_kampus || 'PTN');
+    const stats = `<div class="stats"><div class="card stat"><span>Total Jurnal</span><b>${J.length}</b><small>Tampil</small></div><div class="card stat"><span>Jurnal PTN</span><b style="color:#B45309">${J.filter(x => kap(x) === 'PTN').length}</b><small>Negeri</small></div><div class="card stat"><span>Jurnal PTS</span><b style="color:#0E7490">${J.filter(x => kap(x) === 'PTS').length}</b><small>Swasta</small></div><div class="card stat"><span>Terakreditasi SINTA</span><b style="color:#047857">${J.filter(x => akr(x) !== 'Non-Sinta').length}</b><small>S1 – S4</small></div></div>`;
+    const bar = `<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><input class="in" id="q" style="flex:1;min-width:220px" placeholder="Cari nama jurnal, kampus, rumpun ilmu…" value="${esc(S.q)}"><div class="card" style="padding:4px;display:flex;gap:2px;box-shadow:none"><button class="btn sm ${S.jview === 'grid' ? 'pri' : ''}" data-a="jview" data-id="grid" aria-label="Tampilan kartu">▦</button><button class="btn sm ${S.jview === 'list' ? 'pri' : ''}" data-a="jview" data-id="list" aria-label="Tampilan daftar">☰</button></div><button class="btn" data-a="resetf">⟲ Reset Filter</button></div>
+      <div class="fgrid">${sel('kampus', 'Jenis Kampus', [['', 'Semua'], ['PTN', 'PTN'], ['PTS', 'PTS'], ['Lainnya', 'Lainnya']], f.kampus)}${sel('akr', 'Akreditasi SINTA', [['', 'Semua'], ...AKR.map(x => [x, x])], f.akr)}${sel('biaya', 'Biaya (APC)', [['', 'Semua Biaya'], ['g', 'Gratis'], ['b', 'Berbayar']], f.biaya)}${sel('rumpun', 'Rumpun Ilmu', [['', 'Semua Ilmu'], ...rum.map(x => [x, x])], f.rumpun)}</div></div>`;
+    return stats + bar + (L.length ? `<div class="${S.jview === 'list' ? 'jlist' : 'jgrid'}">${L.map(jPub).join('')}</div>` : '<div class="card mu">Tidak ada jurnal yang sesuai filter.</div>') + `<p class="mu">Menampilkan ${L.length} dari ${J.length} jurnal.</p>`;
   }
 
   // ============ LOGIN ============
@@ -88,10 +121,10 @@
 
   function pJur() {
     const q = S.jq.toLowerCase(), L = S.D.Jurnal.filter(j => (!q || JSON.stringify(j).toLowerCase().includes(q)) && (!S.jbiaya || (S.jbiaya === 'g' ? j.tipe_biaya === 'Gratis' : j.tipe_biaya !== 'Gratis')));
-    return head('Katalog Jurnal Rekomendasi', 'Basis data jurnal target: APC, indeks, metrik, dan visibilitas showcase', `<button class="btn" data-a="csv" data-e="Jurnal">Ekspor Excel</button><button class="btn pri" data-a="add" data-e="Jurnal">+ Tambah Jurnal Baru</button>`) +
+    return head('Katalog Jurnal Rekomendasi', 'Basis data jurnal target: biaya APC, akreditasi, dan visibilitas showcase', `<button class="btn" data-a="csv" data-e="Jurnal">Ekspor Excel</button><button class="btn pri" data-a="add" data-e="Jurnal">+ Tambah Jurnal Baru</button>`) +
       `<div class="stats"><div class="card stat"><span>Total jurnal</span><b>${S.D.Jurnal.length}</b></div><div class="card stat"><span>Bebas biaya</span><b>${S.D.Jurnal.filter(j => j.tipe_biaya === 'Gratis').length}</b></div><div class="card stat"><span>Tampil di showcase</span><b>${S.D.Jurnal.filter(j => j.tampil_publik).length}</b></div></div>
-      <div class="card" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><input class="in" id="jq" style="flex:1;min-width:200px" placeholder="Cari nama jurnal, penerbit, atau cakupan fokus…" value="${esc(S.jq)}"><select id="jb" style="width:170px"><option value="">Semua biaya</option><option value="g" ${S.jbiaya === 'g' ? 'selected' : ''}>Gratis</option><option value="b" ${S.jbiaya === 'b' ? 'selected' : ''}>Berbayar (APC)</option></select></div>
-      ${L.map(j => `<div class="card item" style="display:flex;gap:16px;flex-wrap:wrap"><div style="width:160px">${(() => { const h = jCard({ ...j, scope: '' }); return h.split('<div style="padding:16px">')[0].replace('<div class="card" style="padding:0;overflow:hidden">', ''); })()}</div><div style="flex:1;min-width:240px"><div class="mu" style="font-size:11px;text-transform:uppercase">${esc(j.penerbit)} · Publik: ${j.tampil_publik ? 'AKTIF' : 'NON-AKTIF'}</div><h3>${esc(j.nama)}</h3><span class="bd ${j.tipe_biaya === 'Gratis' ? 'gr' : 'am'}">${j.tipe_biaya === 'Gratis' ? 'Gratis' : 'APC ' + esc(j.apc)}</span> ${j.indeks ? `<span class="bd nv">${esc(j.indeks)}</span>` : ''} <span class="bd sl">IF: ${esc(j.impact_factor || '—')}</span> <span class="bd sl">Review: ${esc(j.waktu_review || '—')}</span><p class="mu">${esc(j.scope)}</p><div style="display:flex;gap:8px"><a class="btn sm" style="line-height:30px" href="${esc(j.link)}" target="_blank" rel="noopener">Buka Jurnal ↗</a><button class="btn pri sm" data-a="edit" data-e="Jurnal" data-id="${j.id}">Ubah Data</button><button class="btn sm dng" data-a="del" data-e="Jurnal" data-id="${j.id}">Hapus</button></div></div></div>`).join('') || '<div class="card mu">Belum ada jurnal.</div>'}`;
+      <div class="card" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><input class="in" id="jq" style="flex:1;min-width:200px" placeholder="Cari nama jurnal, kampus, atau rumpun ilmu…" value="${esc(S.jq)}"><select id="jb" style="width:170px"><option value="">Semua biaya</option><option value="g" ${S.jbiaya === 'g' ? 'selected' : ''}>Gratis</option><option value="b" ${S.jbiaya === 'b' ? 'selected' : ''}>Berbayar (APC)</option></select></div>
+      ${L.map(j => { const v = apcVal(j); return `<div class="card item" style="display:flex;gap:16px;flex-wrap:wrap"><div style="width:140px;flex:none">${thumb(j, '140px', '90px')}</div><div style="flex:1;min-width:240px"><div class="mu" style="font-size:11px;text-transform:uppercase">${esc(j.penerbit)} · Publik: ${j.tampil_publik ? 'AKTIF' : 'NON-AKTIF'}</div><h3>${esc(j.nama)}</h3><span class="bd sl">${esc(j.jenis_kampus || 'PTN')}</span> ${akrBadge(j)} <span class="bd ${j.tipe_biaya === 'Gratis' ? 'gr' : 'am'}">${j.tipe_biaya === 'Gratis' ? 'Gratis' : 'APC ' + esc(v.t)}</span> ${j.rumpun_ilmu ? `<span class="bd bl">${esc(j.rumpun_ilmu)}</span>` : ''}<p class="mu">${esc(j.scope)}</p><div style="display:flex;gap:8px"><a class="btn sm" href="${esc(j.link)}" target="_blank" rel="noopener">Buka Jurnal ↗</a><button class="btn pri sm" data-a="edit" data-e="Jurnal" data-id="${j.id}">Ubah Data</button><button class="btn sm dng" data-a="del" data-e="Jurnal" data-id="${j.id}">Hapus</button></div></div></div>`; }).join('') || '<div class="card mu">Belum ada jurnal.</div>'}`;
   }
 
   function subCard(s) {
@@ -127,7 +160,7 @@
   // ============ MODAL FORM ============
   const FIELDS = {
     Penelitian: [['judul', 'Judul Penelitian *', 'text'], ['bidang', 'Bidang / Disiplin Ilmu', 'text'], ['kolaborator', 'Kolaborator (pisahkan titik koma)', 'textarea'], ['tanggal_mulai', 'Tanggal Mulai', 'date'], ['status', 'Status', 'select', [['Draft'], ['Berjalan'], ['Selesai']]], ['link_berkas', 'Tautan Folder Google Drive', 'url'], ['link_pdf', 'Tautan PDF Naskah', 'url'], ['catatan', 'Catatan Internal', 'textarea'], ['tampil_publik', 'Tampilkan di showcase publik', 'check']],
-    Jurnal: [['nama', 'Nama Jurnal *', 'text'], ['link', 'Tautan Resmi Jurnal *', 'url'], ['thumbnail', 'URL Thumbnail / Cover', 'url'], ['penerbit', 'Penerbit', 'text'], ['tipe_biaya', 'Tipe Biaya', 'select', [['Gratis'], ['Berbayar (APC)']]], ['apc', 'Nominal APC', 'text'], ['indeks', 'Akreditasi / Indeks', 'text'], ['impact_factor', 'Impact Factor', 'text'], ['waktu_review', 'Perkiraan Waktu Review', 'text'], ['scope', 'Scope & Focus', 'textarea'], ['catatan', 'Catatan Internal (tidak tampil publik)', 'textarea'], ['tampil_publik', 'Tampilkan di showcase publik', 'check']],
+    Jurnal: [['nama', 'Nama Jurnal *', 'text'], ['link', 'Tautan Resmi Jurnal *', 'url'], ['thumbnail', 'URL Thumbnail / Cover', 'url'], ['penerbit', 'Kampus / Penerbit', 'text'], ['jenis_kampus', 'Jenis Kampus', 'select', KAMPUS.map(x => [x])], ['rumpun_ilmu', 'Rumpun Ilmu', 'text'], ['akreditasi', 'Akreditasi', 'select', AKR.map(x => [x])], ['tipe_biaya', 'Tipe Biaya', 'select', [['Gratis'], ['Berbayar (APC)']]], ['apc', 'Nominal APC (angka, mis. 500000)', 'text'], ['scope', 'Scope & Focus', 'textarea'], ['catatan', 'Catatan Internal (tidak tampil publik)', 'textarea'], ['tampil_publik', 'Tampilkan di showcase publik', 'check']],
     Submission: [['id_penelitian', 'Penelitian Induk', 'select', 'pen'], ['judul', 'Judul Artikel *', 'text'], ['id_jurnal', 'Jurnal Tujuan', 'select', 'jur'], ['status', 'Status', 'select', STAT.map(x => [x])], ['tgl_submit', 'Tanggal Submit', 'date'], ['tgl_cek', 'Tanggal Cek Terakhir', 'date'], ['deadline_respon', 'Deadline Respon / Revisi', 'date'], ['link_feedback', 'Tautan Feedback Reviewer (internal)', 'url'], ['link_final', 'Tautan Artikel Final', 'url'], ['doi', 'DOI', 'text'], ['tahun_terbit', 'Tahun Terbit', 'text'], ['catatan', 'Catatan Internal', 'textarea'], ['tampil_publik', 'Tampilkan di showcase publik', 'check']],
     CFP: [['nama', 'Nama CFP *', 'text'], ['link', 'Tautan CFP', 'url'], ['id_jurnal', 'Jurnal Terkait', 'select', 'jur'], ['scope', 'Scope', 'textarea'], ['deadline', 'Deadline Submit *', 'date'], ['status', 'Status', 'select', [['Tertarik'], ['Disiapkan'], ['Sudah Submit'], ['Ditutup']]], ['catatan', 'Catatan', 'textarea']]
   };
@@ -139,14 +172,14 @@
   };
   function openForm(ent, rec) {
     rec = rec || {};
-    S.modal = `<div class="ov" data-a="mclose"><div class="mod"><h2>${rec.id ? 'Ubah' : 'Tambah'} ${ent}</h2><form id="mf" data-e="${ent}" data-id="${esc(rec.id || '')}">${FIELDS[ent].map(f => {
+    if (ent === 'Jurnal') rec = { jenis_kampus: 'PTN', ...rec, akreditasi: akr(rec) };
+    openModal(`<div class="ov"><div class="mod"><h2>${rec.id ? 'Ubah' : 'Tambah'} ${ent}</h2><form id="mf" data-e="${ent}" data-id="${esc(rec.id || '')}">${FIELDS[ent].map(f => {
       const v = rec[f[0]] ?? '', n = `name="${f[0]}"`;
       if (f[2] === 'check') return `<label style="font-weight:500"><input type="checkbox" ${n} ${rec[f[0]] ? 'checked' : ''}> ${f[1]}</label>`;
       let ctl = f[2] === 'textarea' ? `<textarea ${n}>${esc(v)}</textarea>` : f[2] === 'select' ? `<select ${n}>${opts(f, v)}</select>` : `<input class="in" ${n} type="${f[2]}" value="${esc(v)}">`;
       if (ent === 'Jurnal' && f[0] === 'thumbnail') ctl += `<button type="button" class="btn sm" style="margin-top:6px" data-a="thumb">Ambil Thumbnail Otomatis</button>`;
       return `<label>${f[1]}</label>${ctl}`;
-    }).join('')}<div class="act"><button type="button" class="btn" data-a="mclose">Batal</button><button class="btn pri">Simpan</button></div></form></div></div>`;
-    draw();
+    }).join('')}<div class="act"><button type="button" class="btn" data-a="mclose">Batal</button><button class="btn pri">Simpan</button></div></form></div></div>`);
   }
 
   // ============ DATA OPS (Optimistic UI) ============
@@ -174,7 +207,7 @@
   function draw() {
     const v = S.view === 'pub' ? viewPub() : S.view === 'login' ? viewLogin() : viewAdmin();
     const f = document.activeElement && document.activeElement.id, pos = document.activeElement && document.activeElement.selectionStart;
-    $('#app').innerHTML = v + (S.modal || '');
+    $('#app').innerHTML = v;
     if (f && ['q', 'jq'].includes(f)) { const e = $('#' + f); if (e) { e.focus(); try { e.setSelectionRange(pos, pos); } catch (_) { } } }
   }
   async function loadPub() { const r = await API.get('getPublic'); if (r.success) S.P = r.data; else toast(r.message || 'Gagal memuat', true); draw(); }
@@ -185,11 +218,13 @@
     const a = t.dataset.a, id = t.dataset.id, ent = t.dataset.e;
     if (a === 'goLogin') { S.view = 'login'; draw(); }
     else if (a === 'goPub') { e.preventDefault(); S.view = 'pub'; draw(); }
-    else if (a === 'tab') { S.tab = id; S.q = ''; draw(); }
+    else if (a === 'tab') { S.tab = id; S.q = ''; S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; draw(); }
     else if (a === 'nav') { e.preventDefault(); S.page = id; S.q = ''; draw(); }
     else if (a === 'subv') { S.subv = id; draw(); }
+    else if (a === 'jview') { S.jview = id; draw(); }
+    else if (a === 'resetf') { S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; S.q = ''; draw(); }
     else if (a === 'logout') { API.post('logout'); API.setTok(null); S.view = 'pub'; S.D = null; loadPub(); }
-    else if (a === 'mclose') { if (e.target === t) { S.modal = null; draw(); } }
+    else if (a === 'mclose') closeModal();
     else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', tgl_cek: today() } : { tampil_publik: false });
     else if (a === 'edit') openForm(ent, S.D[ent].find(x => x.id === id));
     else if (a === 'del') { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) remove(ent, id); }
@@ -197,13 +232,14 @@
     else if (a === 'cek') { const s = S.D.Submission.find(x => x.id === id); upsert('Submission', { ...s, tgl_cek: today() }); toast('Ditandai sudah dicek'); }
     else if (a === 'cfp2sub') { const c = S.D.CFP.find(x => x.id === id); S.page = 'sub'; openForm('Submission', { status: 'Draft', id_jurnal: c.id_jurnal, tgl_cek: today() }); }
     else if (a === 'csv') csv(ent);
-    else if (a === 'hist') { const h = (S.D.StatusLog || []).filter(x => x.id_submission === id); S.modal = `<div class="ov" data-a="mclose"><div class="mod"><h2>Riwayat Status</h2>${h.map(x => `<div class="row"><span>${badge(x.status_lama)} → ${badge(x.status_baru)}</span><span class="mono">${esc(x.waktu)}</span></div>`).join('') || '<p class="mu">Belum ada perubahan status.</p>'}<div class="act"><button class="btn" data-a="mclose">Tutup</button></div></div></div>`; draw(); }
+    else if (a === 'hist') { const h = (S.D.StatusLog || []).filter(x => x.id_submission === id); openModal(`<div class="ov"><div class="mod"><h2>Riwayat Status</h2>${h.map(x => `<div class="row"><span>${badge(x.status_lama)} → ${badge(x.status_baru)}</span><span class="mono">${esc(x.waktu)}</span></div>`).join('') || '<p class="mu">Belum ada perubahan status.</p>'}<div class="act"><button class="btn" data-a="mclose">Tutup</button></div></div></div>`); }
     else if (a === 'thumb') { const u = $('#mf [name=link]').value; if (!u) return toast('Isi tautan jurnal dulu', true); t.textContent = 'Mengambil…'; const r = await API.post('thumb', { url: u }); t.textContent = 'Ambil Thumbnail Otomatis'; if (r.success) { $('#mf [name=thumbnail]').value = r.thumbnail; toast('Thumbnail berhasil diambil'); } else toast(r.message || 'Thumbnail tidak ditemukan', true); }
     else if (a === 'testwa') { const r = await API.post('testwa'); toast(r.message || (r.success ? 'Pesan uji terkirim' : 'Gagal'), !r.success); }
   });
   document.addEventListener('change', e => {
     const t = e.target;
     if (t.dataset && t.dataset.a === 'chg') { const s = S.D.Submission.find(x => x.id === t.dataset.id); upsert('Submission', { ...s, status: t.value, tgl_cek: today() }); toast('Status diperbarui: ' + t.value); }
+    else if (t.id && t.id.startsWith('f_')) { S.f[t.id.slice(2)] = t.value; draw(); }
     else if (t.id === 'yr') { S.yr = t.value; draw(); } else if (t.id === 'jb') { S.jbiaya = t.value; draw(); } else if (t.id === 'oc') { S.onlyCheck = t.checked; draw(); }
   });
   let tm; document.addEventListener('input', e => { const t = e.target; if (t.id === 'q' || t.id === 'jq') { clearTimeout(tm); tm = setTimeout(() => { t.id === 'q' ? S.q = t.value : S.jq = t.value; draw(); }, 250); } });
@@ -214,7 +250,7 @@
       const ent = f.dataset.e, old = f.dataset.id ? S.D[ent].find(x => x.id === f.dataset.id) : {}, rec = { ...old, id: f.dataset.id || uid() };
       FIELDS[ent].forEach(fl => { const el = f.elements[fl[0]]; rec[fl[0]] = fl[2] === 'check' ? el.checked : el.value.trim(); });
       if (ent === 'Jurnal' && rec.tipe_biaya === 'Gratis') rec.apc = '';
-      S.modal = null; await upsert(ent, rec); toast('Data tersimpan');
+      closeModal(); await upsert(ent, rec); toast('Data tersimpan');
     }
     else if (f.id === 'sf') { const o = Object.fromEntries(new FormData(f)); const cur = (S.D.Pengaturan || [])[0] || { id: 'cfg' }; await upsert('Pengaturan', { ...cur, ...o, id: 'cfg' }); toast('Pengaturan tersimpan'); }
   });

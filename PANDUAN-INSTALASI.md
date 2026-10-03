@@ -52,3 +52,23 @@ Folder kerja frontend = **folder hasil ekstrak ZIP `simpen-frontend`** (di dalam
 - Ekspor saat ini berformat **CSV** (dibuka langsung oleh Excel). Ekspor PDF belum tersedia.
 - Perpindahan status di Kanban memakai dropdown pada kartu (belum drag-and-drop).
 - Kuota gratis Fonnte dapat berubah; cek di akun Fonnte Anda.
+
+---
+
+## Memperbarui aplikasi yang sudah terpasang (revisi katalog jurnal)
+
+Lakukan **berurutan**. Data lama Anda tidak hilang: kolom baru ditambahkan di sebelah kanan, dan jurnal lama yang punya isian "Sinta 2" di kolom lama tetap terbaca sebagai Sinta 2.
+
+**A. Backend**
+1. Buka proyek Apps Script → buka `Kode.gs` → **ganti seluruh isinya** dengan `Kode.gs` terbaru. Simpan (`Ctrl + S`).
+2. **Pertahankan** pengaturan yang sudah ada: sandi admin dan `FONNTE_TOKEN` tersimpan di Properti Skrip, bukan di kode, jadi tidak terhapus.
+3. Pilih fungsi **`perbaruiHeaderSheet`** di dropdown → **Jalankan** (sekali). Log harus menampilkan ✅. Fungsi ini hanya menulis judul kolom baris 1, data tidak disentuh.
+4. **Deploy → Kelola deployment → ikon pensil → Versi: Versi baru → Deploy**. URL `/exec` tetap sama, tidak perlu mengubah `config.js`.
+
+**B. Frontend**
+1. Ekstrak `simpen-frontend.zip` terbaru. Buka `js/config.js` dan pastikan `GAS_URL` berisi URL `/exec` Anda (file di ZIP berisi placeholder, jadi isi lagi).
+2. Salin hasil ekstrak menimpa isi folder repository Anda, lalu di PowerShell: `git add .` → `git commit -m "Revisi katalog jurnal"` → `git push`.
+3. Tunggu 1–2 menit, buka situs, tekan `Ctrl + Shift + R`.
+
+**C. Isi ulang data jurnal (disarankan)**
+Buka Katalog Jurnal → **Ubah Data** pada tiap jurnal, lalu atur **Jenis Kampus**, **Rumpun Ilmu**, dan **Akreditasi**. Sampai itu dilakukan, jurnal lama dianggap PTN dan Non-Sinta di tampilan publik.
