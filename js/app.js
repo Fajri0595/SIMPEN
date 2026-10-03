@@ -250,34 +250,23 @@
   // Kartu katalog publik
   function jPub(j) {
     const v = apcVal(j), rum = esc(j.rumpun_ilmu || '—');
-    const topBadges = `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
-      <span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>
-      ${akrBadge(j)}
-    </div>`;
-    const bottom = `<div style="display:flex;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid var(--bd);margin-top:auto">
-      <div>
-        <div class="lbl">Biaya (APC)</div>
-        <b style="color:${v.c};font-size:13px">${esc(v.t)}</b>
-      </div>
-      <div style="text-align:right">
-        <div class="lbl">Rumpun Ilmu</div>
-        <b style="font-size:13px">${rum}</b>
-      </div>
-    </div>`;
 
     if (S.jview === 'list') {
       return `
         <a class="card jc jl" href="${esc(j.link)}" target="_blank" rel="noopener">
-          <div class="jc-cover" style="flex:none">
-            ${thumb(j, '76px', '100px')}
+          <div class="jc-cover-list">
+            ${thumb(j, '130px', '78px')}
           </div>
           <div style="flex:1;min-width:240px">
-            ${topBadges}
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
+              <span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>
+              ${akrBadge(j)}
+            </div>
             <h3 class="jn" style="margin:0 0 4px;font-size:16px">${esc(j.nama)}</h3>
-            <div class="mu kp" style="font-size:12.5px">${SVG.bld} ${esc(j.penerbit || '—')}</div>
+            <div class="mu kp" style="font-size:12.5px">${SVG.bld} <span>${esc(j.penerbit || '—')}</span></div>
             <div class="mu sc" style="font-size:13px;margin-top:6px">${esc(j.scope)}</div>
           </div>
-          <div style="min-width:200px;align-self:center;padding-left:16px;border-left:1px solid var(--bd)">
+          <div class="jc-footer-list">
             <div style="margin-bottom:8px">
               <div class="lbl">Biaya (APC)</div>
               <b style="color:${v.c};font-size:14px">${esc(v.t)}</b>
@@ -293,18 +282,28 @@
 
     return `
       <a class="card jc" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal">
-        <div class="jc-header">
-          <div class="jc-cover">
-            ${thumb(j, '68px', '90px')}
+        <div class="jc-top-meta">
+          <span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>
+          ${akrBadge(j)}
+        </div>
+        <div class="jc-cover-banner">
+          ${thumb(j, '100%', '84px')}
+        </div>
+        <div class="jc-info">
+          <h3 class="jn">${esc(j.nama)}</h3>
+          <div class="mu kp">${SVG.bld} <span>${esc(j.penerbit || '—')}</span></div>
+        </div>
+        <div class="mu sc">${esc(j.scope)}</div>
+        <div class="jc-footer">
+          <div>
+            <div class="lbl">Biaya (APC)</div>
+            <b style="color:${v.c};font-size:13.5px">${esc(v.t)}</b>
           </div>
-          <div class="jc-main-info">
-            ${topBadges}
-            <h3 class="jn" style="margin:0 0 4px;font-size:15px;line-height:1.3">${esc(j.nama)}</h3>
-            <div class="mu kp" style="font-size:12px">${SVG.bld} ${esc(j.penerbit || '—')}</div>
+          <div style="text-align:right">
+            <div class="lbl">Rumpun Ilmu</div>
+            <b style="font-size:13.5px">${rum}</b>
           </div>
         </div>
-        <div class="mu sc" style="font-size:12.5px;margin:8px 0 14px">${esc(j.scope)}</div>
-        ${bottom}
       </a>
     `;
   }
