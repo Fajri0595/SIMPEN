@@ -42,7 +42,11 @@
   };
 
   const badge = s => `<span class="bd ${STC[s] || 'sl'}">${esc(s)}</span>`;
-  const S = { view: 'pub', tab: 'pub', page: 'dash', P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid' };
+  const initialAdminPage = (() => {
+    const p = sessionStorage.getItem('sp_admin_page');
+    return ['dash', 'pen', 'jur', 'sub', 'cfp', 'set'].includes(p) ? p : 'dash';
+  })();
+  const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid' };
 
   const cfg = () => Object.assign({ nama: '', afiliasi: '', wa: '', ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00' }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
   const jname = id => ((S.D?.Jurnal || []).find(j => j.id === id) || {}).nama || '—';
@@ -954,8 +958,8 @@
       ['tampil_publik', 'Tampilkan di showcase publik', 'check']
     ],
     Submission: [
-      ['id_penelitian', 'Penelitian Induk', 'select', 'pen'],
-      ['judul', 'Judul Naskah Artikel *', 'text'],
+      ['id_penelitian', 'Penelitian Induk / Payung Riset (Opsional)', 'select', 'pen'],
+      ['judul', 'Judul Naskah Artikel Ilmiah *', 'text'],
       ['id_jurnal', 'Jurnal Sasaran Tujuan', 'select', 'jur'],
       ['status', 'Status Manuskrip', 'select', STAT.map(x => [x])],
       ['tgl_submit', 'Tanggal Submit', 'date'],
@@ -981,8 +985,8 @@
 
   const opts = (f, v) => {
     let o = f[3];
-    if (o === 'pen') o = [['', '— Pilih Penelitian Induk —'], ...S.D.Penelitian.map(p => [p.id, p.judul])];
-    if (o === 'jur') o = [['', '— Pilih Jurnal Tujuan —'], ...S.D.Jurnal.map(j => [j.id, j.nama])];
+    if (o === 'pen') o = [['', '— Tanpa Penelitian Induk (Artikel Mandiri) —'], ...S.D.Penelitian.map(p => [p.id, p.judul])];
+    if (o === 'jur') o = [['', '— Pilih Jurnal Sasaran —'], ...S.D.Jurnal.map(j => [j.id, j.nama])];
     return o.map(([a, b]) => `<option value="${esc(a)}" ${a === v ? 'selected' : ''}>${esc(b || a)}</option>`).join('');
   };
 
@@ -1107,11 +1111,11 @@
     if (a === 'goLogin') { S.view = 'login'; draw(); }
     else if (a === 'goPub') { e.preventDefault(); S.view = 'pub'; draw(); }
     else if (a === 'tab') { S.tab = id; S.q = ''; S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; draw(); }
-    else if (a === 'nav') { e.preventDefault(); S.page = id; S.q = ''; draw(); }
+    else if (a === 'nav') { e.preventDefault(); S.page = id; sessionStorage.setItem('sp_admin_page', id); S.q = ''; draw(); }
     else if (a === 'subv') { S.subv = id; draw(); }
     else if (a === 'jview') { S.jview = id; draw(); }
     else if (a === 'resetf') { S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; S.q = ''; draw(); }
-    else if (a === 'logout') { API.post('logout'); API.setTok(null); S.view = 'pub'; S.D = null; loadPub(); }
+    else if (a === 'logout') { API.post('logout'); API.setTok(null); sessionStorage.removeItem('sp_admin_page'); S.view = 'pub'; S.D = null; loadPub(); }
     else if (a === 'mclose') closeModal();
     else if (a === 'jdetail') {
       const j = (S.P?.jurnal || S.D?.Jurnal || []).find(x => String(x.id) === String(id) || x.nama === id);
@@ -1122,7 +1126,7 @@
     else if (a === 'del') { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) remove(ent, id); }
     else if (a === 'delOld') { const o = S.D.CFP.filter(c => dayDiff(c.deadline) < 0); if (confirm(`Hapus ${o.length} CFP yang sudah lewat?`)) for (const c of o) await remove('CFP', c.id); }
     else if (a === 'cek') { const s = S.D.Submission.find(x => x.id === id); upsert('Submission', { ...s, tgl_cek: today() }); toast('Ditandai sudah dicek'); }
-    else if (a === 'cfp2sub') { const c = S.D.CFP.find(x => x.id === id); S.page = 'sub'; openForm('Submission', { status: 'Draft', id_jurnal: c.id_jurnal, tgl_cek: today() }); }
+    else if (a === 'cfp2sub') { const c = S.D.CFP.find(x => x.id === id); S.page = 'sub'; sessionStorage.setItem('sp_admin_page', 'sub'); openForm('Submission', { status: 'Draft', id_jurnal: c.id_jurnal, tgl_cek: today() }); }
     else if (a === 'csv') csv(ent);
     else if (a === 'pdfBkd') exportBKD();
     else if (a === 'hist') {
@@ -1231,7 +1235,7 @@
       const b = f.querySelector('button'); b.disabled = true; b.textContent = 'Memeriksa kredensial…';
       const r = await API.post('login', { password: $('#pw').value });
       if (r.success) {
-        API.setTok(r.token); S.view = 'admin'; S.page = 'dash'; S.D = null; draw(); loadAdmin();
+        API.setTok(r.token); S.view = 'admin'; S.page = initialAdminPage; S.D = null; draw(); loadAdmin();
       } else {
         b.disabled = false; b.textContent = 'Masuk ke Panel Pengelola';
         const le = $('#le'); le.style.display = 'block'; le.textContent = r.message || 'Gagal masuk.';
@@ -1259,7 +1263,7 @@
 
   // ============ INIT ============
   (async () => {
-    if (API.tok()) { S.view = 'admin'; draw(); loadAdmin(); }
+    if (API.tok()) { S.view = 'admin'; S.page = initialAdminPage; draw(); loadAdmin(); }
     else { draw(); }
     loadPub();
   })();
