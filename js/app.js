@@ -38,7 +38,11 @@
     calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
     clock: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
     download: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
-    bld: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V5l7-2 7 2v16M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4"/></svg>'
+    bld: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V5l7-2 7 2v16M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4"/></svg>',
+    logo: '<svg width="24" height="24" viewBox="0 0 64 64" fill="none"><polygon points="32,14 54,23 32,32 10,23" fill="#FFFFFF"/><path d="M19,27.2 L19,37 C19,41.5 24.5,44.5 32,44.5 C39.5,44.5 45,41.5 45,37 L45,27.2 L32,32.8 Z" fill="#CBD5E1"/><path d="M49,25 L52,36 L50.5,45 L48.5,45 L50,36 Z" fill="#F59E0B"/><circle cx="51.5" cy="26" r="2" fill="#F59E0B"/><path d="M16,48 C24,44 30,46 32,49 C34,46 40,44 48,48 L48,51 C40,47 34,49 32,52 C30,49 24,47 16,51 Z" fill="#93C5FD"/></svg>',
+    eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+    eyeOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>',
+    copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
   };
 
   const badge = s => `<span class="bd ${STC[s] || 'sl'}">${esc(s)}</span>`;
@@ -48,7 +52,7 @@
   })();
   const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid' };
 
-  const cfg = () => Object.assign({ nama: '', afiliasi: '', wa: '', ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00' }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
+  const cfg = () => Object.assign({ nama: '', afiliasi: '', wa: '', foto: '', link_sinta: '', link_scholar: '', link_scopus: '', ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00' }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
   const jname = id => ((S.D?.Jurnal || []).find(j => j.id === id) || {}).nama || '—';
   const perluCek = s => PROSES.includes(s.status) && s.tgl_cek && -dayDiff(s.tgl_cek) > Number(cfg().ambang_cek);
   const cfpNear = c => c.status !== 'Sudah Submit' && c.status !== 'Ditutup' && dayDiff(c.deadline) >= 0 && dayDiff(c.deadline) <= 7;
@@ -203,10 +207,12 @@
     const totPen = (P.penelitian || []).length;
     
     const initials = esc((P.profil.nama || 'Dosen').split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase());
+    const fotoUrl = esc(P.profil.foto || P.profil.foto_profil || '');
+    const avatarHtml = fotoUrl ? `<img src="${fotoUrl}" alt="${esc(P.profil.nama)}">` : initials;
     const hero = `
       <div class="hero-academic">
         <div class="hero-profile">
-          <div class="hero-avatar">${initials}</div>
+          <div class="hero-avatar">${avatarHtml}</div>
           <div>
             <div class="hero-title">${esc(P.profil.nama)}</div>
             <div class="hero-subtitle">
@@ -214,9 +220,9 @@
               <span class="hero-tag">Dosen &amp; Peneliti</span>
             </div>
             <div class="hero-badges">
-              <a href="https://sinta.kemdikbud.go.id" target="_blank" rel="noopener">🏛️ SINTA Kemdikbud ↗</a>
-              <a href="https://scholar.google.com" target="_blank" rel="noopener">🎓 Google Scholar ↗</a>
-              <a href="https://www.scopus.com" target="_blank" rel="noopener">🔬 Scopus ID ↗</a>
+              <a href="${esc(P.profil.link_sinta || 'https://sinta.kemdikbud.go.id')}" target="_blank" rel="noopener">🏛️ SINTA Kemdikbud ↗</a>
+              <a href="${esc(P.profil.link_scholar || 'https://scholar.google.com')}" target="_blank" rel="noopener">🎓 Google Scholar ↗</a>
+              <a href="${esc(P.profil.link_scopus || 'https://www.scopus.com')}" target="_blank" rel="noopener">🔬 Scopus ID ↗</a>
             </div>
           </div>
         </div>
@@ -226,9 +232,9 @@
     return `
       <header class="top">
         <div class="brand">
-          <div class="logo">SP</div>
+          <div class="logo">${SVG.logo}</div>
           <div>
-            <div class="brand-name">SIMPEN <span class="bd bl" style="font-size:10px;padding:1px 7px">SHOWCASE</span></div>
+            <div class="brand-name">SIMPEN</div>
             <small>${esc(P.profil.nama)} · ${esc(P.profil.afiliasi)}</small>
           </div>
         </div>
@@ -432,7 +438,7 @@
   // ============ LOGIN ============
   const viewLogin = () => `
     <div class="login card">
-      <div class="logo" style="margin:0 auto 16px;width:56px;height:56px;font-size:20px">SP</div>
+      <div class="logo" style="margin:0 auto 16px;width:56px;height:56px;padding:8px">${SVG.logo}</div>
       <h1>Masuk Panel Admin</h1>
       <p class="mu" style="margin-bottom:14px">Sistem Manajemen Penelitian Dosen (SIMPEN)</p>
       <span class="bd bl" style="font-size:12px;padding:4px 12px">Akses khusus pengelola data &amp; publikasi</span>
@@ -444,7 +450,7 @@
         <button class="btn pri" style="width:100%;height:44px;font-size:14px">Masuk ke Panel Pengelola</button>
         <div class="err" id="le" style="display:none"></div>
       </form>
-      <p style="margin-top:24px"><a href="#" data-a="goPub" style="color:var(--mu);text-decoration:none;font-weight:600;font-size:13px">← Kembali ke Showcase Publik</a></p>
+      <p style="margin-top:24px"><a href="#" data-a="goPub" style="color:var(--mu);text-decoration:none;font-weight:600;font-size:13px">← Kembali ke Halaman Utama</a></p>
     </div>
   `;
 
@@ -469,7 +475,7 @@
         <aside class="side">
           <div>
             <div class="brand">
-              <div class="logo">SP</div>
+              <div class="logo">${SVG.logo}</div>
               <div>
                 <b style="color:#fff;font-size:16px">SIMPEN Admin</b>
                 <small style="color:#94a3b8;display:block;font-size:11px">Panel Pengelola Dosen</small>
@@ -703,7 +709,7 @@
       <div class="stats">
         <div class="card stat"><span>Total Jurnal</span><b>${S.D.Jurnal.length}</b><small>Tersimpan</small></div>
         <div class="card stat"><span>Bebas Biaya</span><b style="color:#059669">${S.D.Jurnal.filter(j => j.tipe_biaya === 'Gratis').length}</b><small>Gratis APC</small></div>
-        <div class="card stat"><span>Tampil di Showcase</span><b style="color:#2563EB">${S.D.Jurnal.filter(j => j.tampil_publik).length}</b><small>Publik</small></div>
+        <div class="card stat"><span>Tampil di Publik</span><b style="color:#2563EB">${S.D.Jurnal.filter(j => j.tampil_publik).length}</b><small>Publik</small></div>
       </div>
       <div class="card" style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
         <div class="input-icon-wrap" style="flex:1;min-width:240px">
@@ -724,7 +730,7 @@
             <div style="flex:1;min-width:260px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <span class="mu" style="font-size:12px;font-weight:600">${esc(j.penerbit || '—')}</span>
-                <span class="bd ${j.tampil_publik ? 'gr' : 'sl'}">${j.tampil_publik ? 'Showcase Publik' : 'Privat'}</span>
+                <span class="bd ${j.tampil_publik ? 'gr' : 'sl'}">${j.tampil_publik ? 'Publik' : 'Privat'}</span>
               </div>
               <h3 style="margin:2px 0 8px">${esc(j.nama)}</h3>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
@@ -748,12 +754,25 @@
 
   function subCard(s) {
     const pc = perluCek(s), dl = dayDiff(s.deadline_respon);
+    const ojsInfo = s.akun_ojs ? `
+      <div style="margin-top:6px;padding:5px 8px;background:#F1F5F9;border-radius:6px;font-size:11.5px;display:flex;justify-content:space-between;align-items:center;gap:6px">
+        <span class="mono" style="font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Akun OJS: ${esc(s.akun_ojs)}">🔑 ${esc(s.akun_ojs)}</span>
+        ${s.password_ojs ? `
+          <div class="pwd-cell" style="display:inline-flex;align-items:center;gap:4px;padding:1px 5px">
+            <span class="pwd-text mono" data-val="${esc(s.password_ojs)}" style="letter-spacing:1px;font-size:11px">••••••</span>
+            <button type="button" data-a="togglePwd" title="Lihat Password" style="border:none;background:transparent;cursor:pointer;color:#2563EB;padding:0;display:inline-flex;align-items:center">${SVG.eye}</button>
+            <button type="button" data-a="copyPwd" data-pwd="${esc(s.password_ojs)}" title="Salin Password" style="border:none;background:transparent;cursor:pointer;color:var(--mu);padding:0;display:inline-flex;align-items:center">${SVG.copy}</button>
+          </div>
+        ` : ''}
+      </div>
+    ` : '';
     return `
       <div class="card kanban-card" draggable="true" data-drag-id="${s.id}">
         ${pc ? `<div style="margin-bottom:6px"><span class="bd am">⏱ Perlu dicek · ${-dayDiff(s.tgl_cek)} hr</span></div>` : ''}
         <h3 style="font-size:14px;margin:4px 0 6px;line-height:1.3">${esc(s.judul)}</h3>
         <div class="mu" style="font-size:12.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px">${SVG.book} ${esc(jname(s.id_jurnal))}</div>
-        <div class="mu" style="font-size:11.5px">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>
+        ${ojsInfo}
+        <div class="mu" style="font-size:11.5px;margin-top:6px">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>
         ${dl != null && PROSES.includes(s.status) ? `<div style="margin-top:6px;font-size:12px">Batas revisi: ${pill(dl)}</div>` : ''}
         <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
           ${linkOf(s.id_jurnal, 'Portal')}
@@ -793,6 +812,8 @@
               <tr>
                 <th>Judul Naskah</th>
                 <th>Jurnal Sasaran</th>
+                <th style="min-width:120px">Akun OJS</th>
+                <th style="min-width:130px">Password</th>
                 <th>Status</th>
                 <th>Submit</th>
                 <th>Cek Terakhir</th>
@@ -807,6 +828,22 @@
                     ${perluCek(s) ? '<div><span class="bd am" style="margin-top:4px">Perlu dicek</span></div>' : ''}
                   </td>
                   <td>${esc(jname(s.id_jurnal))}</td>
+                  <td>
+                    ${s.akun_ojs ? `<span class="mono" style="font-size:12.5px;font-weight:600;color:var(--tx)">${esc(s.akun_ojs)}</span>` : '<span class="mu" style="font-size:12px">—</span>'}
+                  </td>
+                  <td>
+                    ${s.password_ojs ? `
+                      <div class="pwd-cell" style="display:inline-flex;align-items:center;gap:6px">
+                        <span class="pwd-text mono" data-val="${esc(s.password_ojs)}" style="font-size:12px;letter-spacing:1px;font-weight:600;color:var(--tx)">••••••</span>
+                        <button type="button" class="btn sm" data-a="togglePwd" title="Lihat/Sembunyikan Password" style="padding:2px 6px;min-height:24px;border:none;background:transparent;cursor:pointer;color:#2563EB;display:inline-flex;align-items:center">
+                          ${SVG.eye}
+                        </button>
+                        <button type="button" class="btn sm" data-a="copyPwd" data-pwd="${esc(s.password_ojs)}" title="Salin Password" style="padding:2px 6px;min-height:24px;border:none;background:transparent;cursor:pointer;color:var(--mu);display:inline-flex;align-items:center">
+                          ${SVG.copy}
+                        </button>
+                      </div>
+                    ` : '<span class="mu" style="font-size:12px">—</span>'}
+                  </td>
                   <td>${badge(s.status)}</td>
                   <td>${fmt(s.tgl_submit)}</td>
                   <td>${fmt(s.tgl_cek)}</td>
@@ -818,7 +855,7 @@
                     <button class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}">${SVG.trash}</button>
                   </td>
                 </tr>
-              `).join('') || '<tr><td colspan="6" class="mu" style="text-align:center;padding:24px">Belum ada submission.</td></tr>'}
+              `).join('') || '<tr><td colspan="8" class="mu" style="text-align:center;padding:24px">Belum ada submission.</td></tr>'}
             </tbody>
           </table>
         </div>
@@ -887,11 +924,38 @@
         <div class="card">
           <h3 style="margin-bottom:16px">Pengingat Otomatis &amp; Profil</h3>
           <form id="sf">
-            <label>Nama Lengkap &amp; Gelar (tampil di showcase publik)</label>
+            <label>Nama Lengkap &amp; Gelar</label>
             <input class="in" name="nama" value="${esc(c.nama)}" placeholder="Dr. Nama Dosen, M.Kom.">
             
             <label>Afiliasi / Universitas</label>
             <input class="in" name="afiliasi" value="${esc(c.afiliasi)}" placeholder="Fakultas / Universitas">
+
+            <label>URL Foto Profil Peneliti (Opsional)</label>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:4px">
+              <div class="hero-avatar" style="width:48px;height:48px;font-size:16px;overflow:hidden;flex-shrink:0;border:2px solid #3B82F6">
+                ${c.foto ? `<img src="${esc(c.foto)}" alt="Foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">` : esc((c.nama || 'D').slice(0, 2).toUpperCase())}
+              </div>
+              <div style="flex:1">
+                <input class="in" name="foto" value="${esc(c.foto || '')}" placeholder="https://... URL direct link foto (.jpg, .png, Google Drive, ImgBB)">
+              </div>
+            </div>
+            <small class="mu" style="display:block;margin-top:4px;font-size:11.5px">💡 Masukkan link foto profil direct. Jika dikosongkan, avatar otomatis menampilkan inisial nama.</small>
+
+            <label>Tautan Profil Akademik (Tampil di Header Publik)</label>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
+              <div>
+                <small class="mu" style="font-weight:600">SINTA Kemdikbud</small>
+                <input class="in" name="link_sinta" value="${esc(c.link_sinta || 'https://sinta.kemdikbud.go.id')}" placeholder="https://sinta.kemdikbud.go.id/authors/detail?id=...">
+              </div>
+              <div>
+                <small class="mu" style="font-weight:600">Google Scholar</small>
+                <input class="in" name="link_scholar" value="${esc(c.link_scholar || 'https://scholar.google.com')}" placeholder="https://scholar.google.com/citations?user=...">
+              </div>
+              <div>
+                <small class="mu" style="font-weight:600">Scopus ID</small>
+                <input class="in" name="link_scopus" value="${esc(c.link_scopus || 'https://www.scopus.com')}" placeholder="https://www.scopus.com/authid/detail.uri?authorId=...">
+              </div>
+            </div>
             
             <label>Nomor WhatsApp Pengelola (Format 628xxx)</label>
             <input class="in" name="wa" value="${esc(c.wa)}" placeholder="628123456789">
@@ -941,7 +1005,7 @@
       ['link_berkas', 'Tautan Folder Google Drive', 'url'],
       ['link_pdf', 'Tautan Dokumen PDF Naskah', 'url'],
       ['catatan', 'Catatan Internal', 'textarea'],
-      ['tampil_publik', 'Tampilkan di showcase publik', 'check']
+      ['tampil_publik', 'Tampilkan di Halaman Publik', 'check']
     ],
     Jurnal: [
       ['nama', 'Nama Jurnal *', 'text'],
@@ -955,12 +1019,14 @@
       ['apc', 'Nominal APC (angka, mis. 500000)', 'text'],
       ['scope', 'Scope & Focus', 'textarea'],
       ['catatan', 'Catatan Internal (tidak tampil publik)', 'textarea'],
-      ['tampil_publik', 'Tampilkan di showcase publik', 'check']
+      ['tampil_publik', 'Tampilkan di Halaman Publik', 'check']
     ],
     Submission: [
       ['id_penelitian', 'Penelitian Induk / Payung Riset (Opsional)', 'select', 'pen'],
       ['judul', 'Judul Naskah Artikel Ilmiah *', 'text'],
       ['id_jurnal', 'Jurnal Sasaran Tujuan', 'select', 'jur'],
+      ['akun_ojs', 'Akun / Username OJS Jurnal (Opsional)', 'text'],
+      ['password_ojs', 'Password Akun OJS Jurnal (Opsional)', 'text'],
       ['status', 'Status Manuskrip', 'select', STAT.map(x => [x])],
       ['tgl_submit', 'Tanggal Submit', 'date'],
       ['tgl_cek', 'Tanggal Cek Terakhir', 'date'],
@@ -970,7 +1036,7 @@
       ['doi', 'Nomor DOI', 'text'],
       ['tahun_terbit', 'Tahun Terbit', 'text'],
       ['catatan', 'Catatan Internal Tim', 'textarea'],
-      ['tampil_publik', 'Tampilkan di showcase publik', 'check']
+      ['tampil_publik', 'Tampilkan di Halaman Publik', 'check']
     ],
     CFP: [
       ['nama', 'Nama CFP / Acara Konferensi *', 'text'],
@@ -1159,6 +1225,35 @@
     else if (a === 'testwa') {
       const r = await API.post('testwa');
       toast(r.message || (r.success ? 'Pesan uji terkirim' : 'Gagal mengirim pesan uji'), !r.success);
+    }
+    else if (a === 'togglePwd') {
+      const cell = t.closest('.pwd-cell');
+      if (cell) {
+        const txt = cell.querySelector('.pwd-text');
+        const val = txt.dataset.val || '';
+        const isMasked = txt.textContent.includes('•');
+        if (isMasked) {
+          txt.textContent = val;
+          txt.style.letterSpacing = 'normal';
+          t.innerHTML = SVG.eyeOff;
+          t.title = 'Sembunyikan Password';
+        } else {
+          txt.textContent = '••••••';
+          txt.style.letterSpacing = '1px';
+          t.innerHTML = SVG.eye;
+          t.title = 'Lihat Password';
+        }
+      }
+    }
+    else if (a === 'copyPwd') {
+      const pwd = t.dataset.pwd || '';
+      if (pwd) {
+        navigator.clipboard.writeText(pwd).then(() => {
+          toast('Password berhasil disalin');
+        }).catch(() => {
+          toast('Gagal menyalin', true);
+        });
+      }
     }
   });
 

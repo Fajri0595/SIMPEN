@@ -16,12 +16,15 @@
         { id: 'j5', nama: 'JANAPATI', penerbit: 'Universitas Pendidikan Ganesha', jenis_kampus: 'PTN', rumpun_ilmu: 'Teknologi', akreditasi: 'Sinta 2', link: 'https://ejournal.undiksha.ac.id', thumbnail: '', tipe_biaya: 'Gratis', apc: '', scope: 'Pendidikan teknik informatika dan sistem cerdas.', catatan: '', tampil_publik: true },
         { id: 'j6', nama: 'IEEE Internet of Things Journal', penerbit: 'IEEE', jenis_kampus: 'Lainnya', rumpun_ilmu: 'Teknologi', akreditasi: 'Non-Sinta', link: 'https://ieeexplore.ieee.org', thumbnail: '', tipe_biaya: 'Berbayar (APC)', apc: 'USD 1,995', scope: 'IoT, edge computing, jaringan sensor.', catatan: '', tampil_publik: false }],
       Submission: [
-        { id: 's1', id_penelitian: 'p1', judul: 'Adaptive Deep Learning for Edge-IoT Anomaly Detection', id_jurnal: 'j6', status: 'Published', tgl_submit: dt(-400), tgl_cek: dt(-100), deadline_respon: '', link_feedback: '', link_final: 'https://doi.org/10.1109/JIOT.2026.0001', doi: '10.1109/JIOT.2026.0001', tahun_terbit: String(new Date().getFullYear()), catatan: '', tampil_publik: true },
-        { id: 's2', id_penelitian: 'p1', judul: 'Multi-Modal Spectral Transformer for Crop Disease Detection', id_jurnal: 'j6', status: 'Under Review', tgl_submit: dt(-60), tgl_cek: dt(-18), deadline_respon: '', link_feedback: '', link_final: '', doi: '', tahun_terbit: '', catatan: '', tampil_publik: true },
-        { id: 's3', id_penelitian: 'p1', judul: 'Deteksi Plagiarisme Kode Berbasis Graph Embedding', id_jurnal: 'j5', status: 'Revision Requested', tgl_submit: dt(-90), tgl_cek: dt(-2), deadline_respon: dt(10), link_feedback: '', link_final: '', doi: '', tahun_terbit: '', catatan: '', tampil_publik: true }],
+        { id: 's1', id_penelitian: 'p1', judul: 'Adaptive Deep Learning for Edge-IoT Anomaly Detection', id_jurnal: 'j6', status: 'Published', tgl_submit: dt(-400), tgl_cek: dt(-100), deadline_respon: '', link_feedback: '', link_final: 'https://doi.org/10.1109/JIOT.2026.0001', doi: '10.1109/JIOT.2026.0001', tahun_terbit: String(new Date().getFullYear()), akun_ojs: 'fajrifadhili', password_ojs: 'rahasia123', catatan: '', tampil_publik: true },
+        { id: 's2', id_penelitian: 'p1', judul: 'Multi-Modal Spectral Transformer for Crop Disease Detection', id_jurnal: 'j6', status: 'Under Review', tgl_submit: dt(-60), tgl_cek: dt(-18), deadline_respon: '', link_feedback: '', link_final: '', doi: '', tahun_terbit: '', akun_ojs: 'fajrifadhili', password_ojs: 'pass@2026', catatan: '', tampil_publik: true },
+        { id: 's3', id_penelitian: 'p1', judul: 'Deteksi Plagiarisme Kode Berbasis Graph Embedding', id_jurnal: 'j5', status: 'Revision Requested', tgl_submit: dt(-90), tgl_cek: dt(-2), deadline_respon: dt(10), link_feedback: '', link_final: '', doi: '', tahun_terbit: '', akun_ojs: 'peneliti_janapati', password_ojs: 'Janapati#456', catatan: '', tampil_publik: true }],
       CFP: [
         { id: 'c1', nama: 'ICACSIS 2026 — Intl. Conf. on Advanced Computer Science', link: 'https://icacsis.org', id_jurnal: '', scope: 'AI, IoT, Computer Vision', deadline: dt(3), status: 'Disiapkan', catatan: '' },
-        { id: 'c2', nama: 'Call for Papers Jurnal Tekno Komputasi Vol. 14', link: '', id_jurnal: 'j5', scope: 'Software Engineering, NLP', deadline: dt(40), status: 'Tertarik', catatan: '' }]
+        { id: 'c2', nama: 'Call for Papers Jurnal Tekno Komputasi Vol. 14', link: '', id_jurnal: 'j5', scope: 'Software Engineering, NLP', deadline: dt(40), status: 'Tertarik', catatan: '' }],
+      Pengaturan: [
+        { id: 'cfg', nama: 'Ahmad Fajri Fadhili, S.Hum, M.Pd', afiliasi: 'Pendidikan Bahasa Arab/Universitas Al-Amien Prenduan', foto: '', link_sinta: 'https://sinta.kemdikbud.go.id', link_scholar: 'https://scholar.google.com', link_scopus: 'https://scopus.com', wa: '', ambang_cfp: '7,3,0', ambang_cek: '14', jam: '08:00' }
+      ]
     };
   }
   const db = () => JSON.parse(localStorage.getItem(KEY) || 'null') || (localStorage.setItem(KEY, JSON.stringify(seed())), seed());
@@ -37,7 +40,14 @@
     }));
     const cf = (d.Pengaturan || [])[0] || {};
     return {
-      profil: { nama: cf.nama || 'Dr. Nama Dosen, M.Kom.', afiliasi: cf.afiliasi || 'Fakultas / Universitas (Mode Demo)' },
+      profil: {
+        nama: cf.nama || 'Ahmad Fajri Fadhili, S.Hum, M.Pd',
+        afiliasi: cf.afiliasi || 'Pendidikan Bahasa Arab/Universitas Al-Amien Prenduan',
+        foto: cf.foto || '',
+        link_sinta: cf.link_sinta || '',
+        link_scholar: cf.link_scholar || '',
+        link_scopus: cf.link_scopus || ''
+      },
       publikasi: S.filter(s => s.status === 'Published').map(row),
       proses: S.filter(s => PROSES.includes(s.status)).map(row),
       penelitian: P,

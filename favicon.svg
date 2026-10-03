@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="simpenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="50%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <!-- Background Shield/Squircle -->
+  <rect width="64" height="64" rx="16" fill="url(#simpenGrad)"/>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+  
+  <!-- Academic Cap (Toga) -->
+  <g filter="url(#shadow)">
+    <!-- Diamond Top -->
+    <polygon points="32,14 54,23 32,32 10,23" fill="url(#accentGrad)"/>
+    <!-- Skullcap Base -->
+    <path d="M19,27.2 L19,37 C19,41.5 24.5,44.5 32,44.5 C39.5,44.5 45,41.5 45,37 L45,27.2 L32,32.8 Z" fill="#CBD5E1"/>
+    <!-- Tassel / Kuncir Pita -->
+    <path d="M49,25 L52,36 L50.5,45 L48.5,45 L50,36 Z" fill="url(#goldGrad)"/>
+    <circle cx="51.5" cy="26" r="2" fill="url(#goldGrad)"/>
+  </g>
+
+  <!-- Open Research Book Foundation -->
+  <path d="M16,48 C24,44 30,46 32,49 C34,46 40,44 48,48 L48,51 C40,47 34,49 32,52 C30,49 24,47 16,51 Z" fill="#93C5FD"/>
+</svg>

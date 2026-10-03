@@ -291,12 +291,19 @@ label {
   width: 40px;
   height: 40px;
   border-radius: var(--r-md);
-  background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+  background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #2563EB 100%);
   color: #fff;
   font-weight: 800;
   font-size: 15px;
   letter-spacing: -0.03em;
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  overflow: hidden;
+  padding: 6px;
+}
+.logo svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .wrap {
@@ -305,7 +312,7 @@ label {
   padding: 32px 24px 64px;
 }
 
-/* Academic Hero Section (Public Showcase) */
+/* Academic Hero Section (Public Header) */
 .hero-academic {
   background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #1E3A8A 100%);
   border-radius: var(--r-xl);
@@ -349,6 +356,20 @@ label {
   border: 3px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
   flex-shrink: 0;
+  overflow: hidden;
+}
+.hero-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.pwd-cell {
+  background: #F8FAFC;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-sm);
+  padding: 3px 8px;
 }
 .hero-title {
   color: #FFFFFF;
