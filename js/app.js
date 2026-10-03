@@ -37,6 +37,7 @@
     alert: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
     calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
     clock: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+    download: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
     bld: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V5l7-2 7 2v16M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4"/></svg>'
   };
 
@@ -63,6 +64,19 @@
     const n = String(j.apc || '').replace(/[.\s]/g, '');
     return { t: /^\d+$/.test(n) ? 'Rp ' + Number(n).toLocaleString('id-ID') : (j.apc || 'Berbayar'), c: '#1E3A8A' };
   };
+  const formatImgUrl = url => {
+    if (!url) return '';
+    let u = String(url).trim();
+    if (u.includes('drive.google.com')) {
+      const m = u.match(/\/d\/([a-zA-Z0-9_-]+)/) || u.match(/id=([a-zA-Z0-9_-]+)/);
+      if (m && m[1]) return `https://lh3.googleusercontent.com/d/${m[1]}`;
+    }
+    if (u.includes('dropbox.com')) {
+      return u.replace('?dl=0', '?raw=1').replace('&dl=0', '&raw=1');
+    }
+    return u;
+  };
+
   const thumb = (j, w, h) => {
     const ini = esc((j.nama || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 3).join('').toUpperCase() || 'JUR');
     const pub = esc(j.penerbit || 'Jurnal');
@@ -73,11 +87,13 @@
       <small class="jcp-sub">${pub}</small>
     </div>`;
 
-    const hasThumb = j.thumbnail && String(j.thumbnail).trim().length > 10;
+    const rawThumb = j.thumbnail ? String(j.thumbnail).trim() : '';
+    const imgUrl = formatImgUrl(rawThumb);
+    const hasThumb = imgUrl.length > 10;
     return `
       <div class="journal-cover-wrap" style="width:${w};height:${h}">
         ${hasThumb ? `
-          <img src="${esc(String(j.thumbnail).trim())}" alt="${esc(j.nama)}" class="journal-cover-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <img src="${esc(imgUrl)}" alt="${esc(j.nama)}" class="journal-cover-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div style="display:none;width:100%;height:100%">${box}</div>
         ` : box}
       </div>
@@ -253,12 +269,12 @@
 
     if (S.jview === 'list') {
       return `
-        <a class="card jc jl" href="${esc(j.link)}" target="_blank" rel="noopener">
+        <a class="card jc jl" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal: ${esc(j.nama)}">
           <div class="jc-cover-list">
-            ${thumb(j, '130px', '78px')}
+            ${thumb(j, '100%', '100%')}
           </div>
           <div style="flex:1;min-width:240px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
               <span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>
               ${akrBadge(j)}
             </div>
@@ -281,17 +297,19 @@
     }
 
     return `
-      <a class="card jc" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal">
-        <div class="jc-top-meta">
-          <span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>
-          ${akrBadge(j)}
-        </div>
-        <div class="jc-cover-banner">
-          ${thumb(j, '100%', '84px')}
-        </div>
-        <div class="jc-info">
-          <h3 class="jn">${esc(j.nama)}</h3>
-          <div class="mu kp">${SVG.bld} <span>${esc(j.penerbit || '—')}</span></div>
+      <a class="card jc" href="${esc(j.link)}" target="_blank" rel="noopener" title="Buka situs jurnal: ${esc(j.nama)}">
+        <div class="jc-header">
+          <div class="jc-cover-box">
+            ${thumb(j, '100%', '100%')}
+          </div>
+          <div class="jc-body">
+            <div class="jc-badges">
+              <span class="bd sl" style="font-size:11px">${esc(j.jenis_kampus || 'PTN')}</span>
+              ${akrBadge(j)}
+            </div>
+            <h3 class="jn">${esc(j.nama)}</h3>
+            <div class="mu kp">${SVG.bld} <span>${esc(j.penerbit || '—')}</span></div>
+          </div>
         </div>
         <div class="mu sc">${esc(j.scope)}</div>
         <div class="jc-footer">
@@ -637,7 +655,7 @@
         const v = apcVal(j);
         return `
           <div class="card item" style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-            <div style="width:84px;flex:none">${thumb(j, '84px', '112px')}</div>
+            <div class="jc-cover-box" style="flex:none">${thumb(j, '100%', '100%')}</div>
             <div style="flex:1;min-width:260px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <span class="mu" style="font-size:12px;font-weight:600">${esc(j.penerbit || '—')}</span>
@@ -920,7 +938,17 @@
               const v = rec[f[0]] ?? '', n = `name="${f[0]}"`;
               if (f[2] === 'check') return `<label style="font-weight:600;display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer"><input type="checkbox" ${n} ${rec[f[0]] ? 'checked' : ''}> ${f[1]}</label>`;
               let ctl = f[2] === 'textarea' ? `<textarea ${n}>${esc(v)}</textarea>` : f[2] === 'select' ? `<select ${n}>${opts(f, v)}</select>` : `<input class="in" ${n} type="${f[2]}" value="${esc(v)}">`;
-              if (ent === 'Jurnal' && f[0] === 'thumbnail') ctl += `<button type="button" class="btn sm" style="margin-top:8px" data-a="thumb">🔍 Ambil Thumbnail Otomatis</button>`;
+              if (ent === 'Jurnal' && f[0] === 'thumbnail') {
+                ctl += `
+                  <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+                    <button type="button" class="btn sm" data-a="thumb">🔍 Ambil Thumbnail Otomatis</button>
+                    <span class="mu" style="font-size:11.5px">atau tempel direct link cover (.jpg / .png / Google Drive)</span>
+                  </div>
+                  <div class="mu" style="font-size:11.5px;margin-top:6px;line-height:1.4">
+                    💡 <b>Rekomendasi Cover Buku:</b> Gunakan gambar cover edisi/isu (rasio potret A4/buku). Bisa salin direct URL dari web jurnal, upload ke <b>Postimages.org</b>, <b>ImgBB.com</b>, atau Google Drive (akses: 'Anyone with link').
+                  </div>
+                `;
+              }
               return `<label>${f[1]}</label>${ctl}`;
             }).join('')}
             <div class="act">
