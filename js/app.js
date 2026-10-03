@@ -604,9 +604,9 @@
           <h3>Distribusi Status Naskah</h3>
           <div style="display:flex;gap:20px;align-items:center;margin-top:16px">
             <div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(${cg || '#E2E8F0 0 360deg'});display:grid;place-items:center;flex-shrink:0;box-shadow:var(--sh-xs)">
-              <div style="width:82px;height:82px;border-radius:50%;background:#FFF;display:grid;place-items:center;text-align:center">
-                <span class="mu" style="font-size:10px;text-transform:uppercase">Total</span>
-                <b style="font-size:20px;line-height:1;margin-top:-2px">${D.Submission.length}</b>
+              <div style="width:84px;height:84px;border-radius:50%;background:#FFF;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,0.04)">
+                <span class="mu" style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;line-height:1;margin-bottom:3px">Total</span>
+                <b style="font-size:22px;font-weight:700;line-height:1;color:var(--tx)">${D.Submission.length}</b>
               </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;max-height:160px;overflow-y:auto;padding-right:6px">
