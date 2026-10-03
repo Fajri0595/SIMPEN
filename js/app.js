@@ -333,8 +333,8 @@
     const scope = esc(j.scope || 'Belum ada rincian fokus dan ruang lingkup (focus & scope) untuk jurnal ini.');
 
     openModal(`
-      <div class="ov" data-a="mclose">
-        <div class="mod" onclick="event.stopPropagation()" style="max-width:580px;padding:26px 28px">
+      <div class="ov">
+        <div class="mod" style="max-width:580px;padding:26px 28px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:20px">
             <div style="display:flex;gap:16px;align-items:flex-start">
               <div class="jc-cover-box" style="width:72px;height:96px;flex-shrink:0">
@@ -347,7 +347,7 @@
                 </div>
               </div>
             </div>
-            <button class="btn sm" data-a="mclose" aria-label="Tutup" style="padding:4px 8px;font-size:16px;line-height:1;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;color:var(--mu);cursor:pointer">✕</button>
+            <button type="button" class="btn sm" data-a="mclose" aria-label="Tutup" style="padding:4px 8px;font-size:16px;line-height:1;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;color:var(--mu);cursor:pointer">✕</button>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
@@ -1250,7 +1250,6 @@
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
     if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.dataset && e.target.dataset.a === 'jdetail') {
       e.preventDefault();
       const j = (S.P?.jurnal || S.D?.Jurnal || []).find(x => String(x.id) === String(e.target.dataset.id) || x.nama === e.target.dataset.id);
