@@ -1225,6 +1225,7 @@
     else if (a === 'testwa') {
       const r = await API.post('testwa');
       toast(r.message || (r.success ? 'Pesan uji terkirim' : 'Gagal mengirim pesan uji'), !r.success);
+      if (r.success) await loadAdmin();
     }
     else if (a === 'togglePwd') {
       const cell = t.closest('.pwd-cell');
