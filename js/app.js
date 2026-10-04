@@ -50,7 +50,7 @@
     const p = sessionStorage.getItem('sp_admin_page');
     return ['dash', 'pen', 'jur', 'sub', 'cfp', 'set'].includes(p) ? p : 'dash';
   })();
-  const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid' };
+  const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid', pubJurPage: 1, pubJurPerPage: 12, adminJurPage: 1, adminJurPerPage: 10 };
 
   const cfg = () => Object.assign({ nama: '', afiliasi: '', wa: '', foto: '', link_sinta: '', link_scholar: '', link_scopus: '', ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00' }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
   const jname = id => ((S.D?.Jurnal || []).find(j => j.id === id) || {}).nama || '—';
@@ -115,6 +115,64 @@
     setTimeout(() => d.remove(), 3500);
   }
   const pill = n => n < 0 ? `<span class="bd sl">Lewat</span>` : `<span class="bd ${n <= 3 ? 'rs' : n <= 7 ? 'am' : 'sl'}">${n === 0 ? 'Hari-H' : 'H-' + n}</span>`;
+
+  function renderPagination(curPage, totalPages, totalItems, perPage, type, perPageOptions = [6, 12, 24, 48, 100]) {
+    if (totalItems <= 0) return '';
+    const start = (curPage - 1) * perPage + 1;
+    const end = Math.min(curPage * perPage, totalItems);
+
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (curPage <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (curPage >= totalPages - 3) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(curPage - 1);
+        pages.push(curPage);
+        pages.push(curPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+
+    const selectId = type === 'pub' ? 'pub_perpage' : 'admin_perpage';
+    const actionName = type === 'pub' ? 'pubPage' : 'adminPage';
+    const optsHtml = perPageOptions.map(n => `<option value="${n}" ${n === perPage ? 'selected' : ''}>${n} per halaman</option>`).join('');
+
+    return `
+      <div class="pag-wrap" id="${type}-pagination">
+        <div class="pag-info-group">
+          <div class="pag-info">Menampilkan <b>${start}–${end}</b> dari <b>${totalItems}</b> jurnal <span class="mu" style="font-size:12px">(Hal. ${curPage}/${totalPages})</span></div>
+          <div class="pag-perpage-wrap">
+            <label for="${selectId}" style="margin:0;font-size:12.5px;color:var(--mu);cursor:pointer">Tampilkan:</label>
+            <select id="${selectId}" class="pag-perpage-select">
+              ${optsHtml}
+            </select>
+          </div>
+        </div>
+        <div class="pag-nav" role="navigation" aria-label="Navigasi Halaman Katalog">
+          <button type="button" class="btn sm pag-btn" data-a="${actionName}" data-page="1" ${curPage === 1 ? 'disabled title="Halaman pertama"' : 'title="Ke halaman pertama"'}>«</button>
+          <button type="button" class="btn sm pag-btn" data-a="${actionName}" data-page="${curPage - 1}" ${curPage === 1 ? 'disabled title="Halaman sebelumnya"' : 'title="Ke halaman sebelumnya"'}>‹ Prev</button>
+          ${pages.map(p => {
+            if (p === '...') return `<span class="pag-ellipsis">…</span>`;
+            const isActive = p === curPage;
+            return `<button type="button" class="btn sm pag-btn ${isActive ? 'pri' : ''}" data-a="${actionName}" data-page="${p}" ${isActive ? 'aria-current="page"' : ''}>${p}</button>`;
+          }).join('')}
+          <button type="button" class="btn sm pag-btn" data-a="${actionName}" data-page="${curPage + 1}" ${curPage === totalPages ? 'disabled title="Halaman berikutnya"' : 'title="Ke halaman berikutnya"'}>Next ›</button>
+          <button type="button" class="btn sm pag-btn" data-a="${actionName}" data-page="${totalPages}" ${curPage === totalPages ? 'disabled title="Halaman terakhir"' : 'title="Ke halaman terakhir"'}>»</button>
+        </div>
+      </div>
+    `;
+  }
 
   // ============ PUBLIK ============
   function pubIdx(i) { return i ? `<span class="bd nv">${esc(i)}</span>` : ''; }
@@ -432,7 +490,21 @@
         </div>
       </div>
     `;
-    return stats + bar + (L.length ? `<div class="${S.jview === 'list' ? 'jlist' : 'jgrid'}">${L.map(jPub).join('')}</div>` : '<div class="card mu" style="text-align:center;padding:32px">Tidak ada jurnal yang sesuai filter.</div>') + `<p class="mu" style="margin-top:14px;font-size:13px">Menampilkan ${L.length} dari total ${J.length} jurnal rekomendasi.</p>`;
+
+    const totalItems = L.length;
+    const perPage = S.pubJurPerPage || 12;
+    const totalPages = Math.ceil(totalItems / perPage) || 1;
+    const page = Math.min(Math.max(1, S.pubJurPage || 1), totalPages);
+    S.pubJurPage = page;
+    const startIdx = (page - 1) * perPage;
+    const endIdx = Math.min(startIdx + perPage, totalItems);
+    const pageItems = L.slice(startIdx, endIdx);
+
+    const paginationHtml = renderPagination(page, totalPages, totalItems, perPage, 'pub', [6, 12, 24, 48, 100]);
+
+    return stats + bar + '<div id="katalog-top"></div>' +
+      (totalItems ? `<div class="${S.jview === 'list' ? 'jlist' : 'jgrid'}">${pageItems.map(jPub).join('')}</div>` : '<div class="card mu" style="text-align:center;padding:32px">Tidak ada jurnal yang sesuai filter.</div>') +
+      paginationHtml;
   }
 
   // ============ LOGIN ============
@@ -702,6 +774,17 @@
 
   function pJur() {
     const q = S.jq.toLowerCase(), L = S.D.Jurnal.filter(j => (!q || JSON.stringify(j).toLowerCase().includes(q)) && (!S.jbiaya || (S.jbiaya === 'g' ? j.tipe_biaya === 'Gratis' : j.tipe_biaya !== 'Gratis')));
+    const totalItems = L.length;
+    const perPage = S.adminJurPerPage || 10;
+    const totalPages = Math.ceil(totalItems / perPage) || 1;
+    const page = Math.min(Math.max(1, S.adminJurPage || 1), totalPages);
+    S.adminJurPage = page;
+    const startIdx = (page - 1) * perPage;
+    const endIdx = Math.min(startIdx + perPage, totalItems);
+    const pageItems = L.slice(startIdx, endIdx);
+
+    const paginationHtml = renderPagination(page, totalPages, totalItems, perPage, 'admin', [5, 10, 25, 50, 100]);
+
     return head('Katalog Jurnal Target', 'Basis data jurnal: akreditasi SINTA, biaya APC, dan visibilitas publik', `
       <button class="btn" data-a="csv" data-e="Jurnal">${SVG.download} Ekspor Excel</button>
       <button class="btn pri" data-a="add" data-e="Jurnal">${SVG.plus} Tambah Jurnal Baru</button>
@@ -722,7 +805,8 @@
           <option value="b" ${S.jbiaya === 'b' ? 'selected' : ''}>Berbayar (APC)</option>
         </select>
       </div>
-      ${L.map(j => {
+      <div id="admin-jur-top"></div>
+      ${pageItems.map(j => {
         const v = apcVal(j);
         return `
           <div class="card item" style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
@@ -749,6 +833,7 @@
           </div>
         `;
       }).join('') || '<div class="card mu" style="text-align:center;padding:32px">Belum ada data jurnal yang tersimpan.</div>'}
+      ${paginationHtml}
     `;
   }
 
@@ -1176,11 +1261,29 @@
     const a = t.dataset.a, id = t.dataset.id, ent = t.dataset.e;
     if (a === 'goLogin') { S.view = 'login'; draw(); }
     else if (a === 'goPub') { e.preventDefault(); S.view = 'pub'; draw(); }
-    else if (a === 'tab') { S.tab = id; S.q = ''; S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; draw(); }
-    else if (a === 'nav') { e.preventDefault(); S.page = id; sessionStorage.setItem('sp_admin_page', id); S.q = ''; draw(); }
+    else if (a === 'tab') { S.tab = id; S.q = ''; S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; S.pubJurPage = 1; draw(); }
+    else if (a === 'nav') { e.preventDefault(); S.page = id; sessionStorage.setItem('sp_admin_page', id); S.q = ''; S.adminJurPage = 1; draw(); }
     else if (a === 'subv') { S.subv = id; draw(); }
     else if (a === 'jview') { S.jview = id; draw(); }
-    else if (a === 'resetf') { S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; S.q = ''; draw(); }
+    else if (a === 'resetf') { S.f = { kampus: '', akr: '', biaya: '', rumpun: '' }; S.q = ''; S.pubJurPage = 1; draw(); }
+    else if (a === 'pubPage') {
+      const p = Number(t.dataset.page);
+      if (p && p !== S.pubJurPage) {
+        S.pubJurPage = p;
+        draw();
+        const el = document.getElementById('katalog-top') || document.querySelector('.jgrid, .jlist');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    else if (a === 'adminPage') {
+      const p = Number(t.dataset.page);
+      if (p && p !== S.adminJurPage) {
+        S.adminJurPage = p;
+        draw();
+        const el = document.getElementById('admin-jur-top');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
     else if (a === 'logout') { API.post('logout'); API.setTok(null); sessionStorage.removeItem('sp_admin_page'); S.view = 'pub'; S.D = null; loadPub(); }
     else if (a === 'mclose') closeModal();
     else if (a === 'jdetail') {
@@ -1265,10 +1368,12 @@
       upsert('Submission', { ...s, status: t.value, tgl_cek: today() });
       toast('Status naskah diubah: ' + t.value);
     }
-    else if (t.id && t.id.startsWith('f_')) { S.f[t.id.slice(2)] = t.value; draw(); }
+    else if (t.id && t.id.startsWith('f_')) { S.f[t.id.slice(2)] = t.value; S.pubJurPage = 1; draw(); }
     else if (t.id === 'yr') { S.yr = t.value; draw(); }
-    else if (t.id === 'jb') { S.jbiaya = t.value; draw(); }
+    else if (t.id === 'jb') { S.jbiaya = t.value; S.adminJurPage = 1; draw(); }
     else if (t.id === 'oc') { S.onlyCheck = t.checked; draw(); }
+    else if (t.id === 'pub_perpage') { S.pubJurPerPage = Number(t.value) || 12; S.pubJurPage = 1; draw(); }
+    else if (t.id === 'admin_perpage') { S.adminJurPerPage = Number(t.value) || 10; S.adminJurPage = 1; draw(); }
   });
 
   let tm;
@@ -1276,7 +1381,16 @@
     const t = e.target;
     if (t.id === 'q' || t.id === 'jq') {
       clearTimeout(tm);
-      tm = setTimeout(() => { t.id === 'q' ? S.q = t.value : S.jq = t.value; draw(); }, 200);
+      tm = setTimeout(() => {
+        if (t.id === 'q') {
+          S.q = t.value;
+          S.pubJurPage = 1;
+        } else {
+          S.jq = t.value;
+          S.adminJurPage = 1;
+        }
+        draw();
+      }, 200);
     }
   });
 

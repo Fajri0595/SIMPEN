@@ -11,7 +11,7 @@
 | `index.html` | 1 KB | HTML skeleton, load semua JS/CSS |
 | `css/style.css` | 8 KB | Design system: warna, tipografi, responsive, dark mode |
 | `js/config.js` | <1 KB | **HARUS DIISI**: URL GAS backend (`GAS_URL`) |
-| `js/api.js` | 2 KB | API layer: fetch ke GAS + mode demo (saat GAS_URL kosong) |
+| `js/api.js` | 1 KB | API layer: fetch ke Google Apps Script backend |
 | `js/app.js` | 44 KB | SPA utama: state management, render publik/admin, event handler |
 
 ### **Backend (Google Apps Script)**
@@ -97,13 +97,12 @@ window.SIMPEN_CONFIG = {
 
 ---
 
-### **js/api.js** (66 baris)
+### **js/api.js**
 
 **Lapisan abstraksi antara app.js dan backend:**
 
 ```javascript
 window.API = {
-  demo        // boolean: apakah mode demo atau production?
   tok()       // get token dari localStorage
   setTok(t)   // set/remove token
   get(action) // fetch GET ke GAS (publik, tanpa auth)
@@ -111,17 +110,7 @@ window.API = {
 }
 ```
 
-**Mode Demo:**
-- Trigger: `!/^https:\/\/script\.google\.com\//.test(GAS_URL)`
-- Data: dummy di `seed()`
-- Sandi: `admin`
-- Tempat: `localStorage[sp_demo]`
-
-**Seed Data Demo:**
-- 1 Penelitian (Edge-AI)
-- 6 Jurnal (Tadris, LISANUNA, Asalibuna, GIAT, JANAPATI, IEEE IoT)
-- 3 Submission (Published, Under Review, Revision Requested)
-- 2 CFP (ICACSIS, Jurnal Tekno Komputasi)
+Terhubung langsung ke backend Google Apps Script secara real-time.
 
 ---
 
@@ -142,7 +131,11 @@ const S = {
   subv: 'kanban|tabel',        // view submission
   onlyCheck: false,            // hanya submission perlu dicek
   f: {kampus, akr, biaya, rumpun},  // filter katalog jurnal
-  jview: 'grid|list'           // view katalog jurnal
+  jview: 'grid|list',          // view katalog jurnal
+  pubJurPage: 1,               // halaman aktif katalog publik
+  pubJurPerPage: 12,           // limit item per halaman katalog publik (opsi 6, 12, 24, 48, 100)
+  adminJurPage: 1,             // halaman aktif katalog admin
+  adminJurPerPage: 10          // limit item per halaman katalog admin (opsi 5, 10, 25, 50, 100)
 };
 ```
 
@@ -150,14 +143,14 @@ const S = {
 1. **viewPub()** — showcase publik (3 tab)
    - Tab Publikasi: daftar artikel terbit, filter tahun
    - Tab Dalam Proses: stepper 6 tahap
-   - Tab Katalog Jurnal: grid/list, 4 filter, 4 stat card
+   - Tab Katalog Jurnal: grid/list, 4 filter, 4 stat card, pagination nomor halaman (1, 2, 3...) & pemilih jumlah per halaman
 
 2. **viewLogin()** — form login admin
 
 3. **viewAdmin()** — panel admin (6 pages)
    - `pDash()` — dashboard, 5 stat card, perlu perhatian split, 3 chart, WA log
    - `pPen()` — CRUD Penelitian
-   - `pJur()` — CRUD Jurnal + thumbnail
+   - `pJur()` — CRUD Jurnal + thumbnail, pagination nomor halaman (1, 2, 3...) & pemilih jumlah per halaman
    - `pSub()` — kanban/tabel, riwayat status
    - `pCfp()` — CFP aktif/lama
    - `pSet()` — pengaturan + log notifikasi
