@@ -72,6 +72,80 @@
     const n = String(j.apc || '').replace(/[.\s]/g, '');
     return { t: /^\d+$/.test(n) ? 'Rp ' + Number(n).toLocaleString('id-ID') : (j.apc || 'Berbayar'), c: '#1E3A8A' };
   };
+
+  // Normalisasi & Deteksi Duplikasi Data Jurnal
+  const normCleanJournalName = s => String(s || '').trim().toLowerCase().replace(/[\u2018\u2019`']/g, '').replace(/[\u201C\u201D"]/g, '').replace(/[^a-z0-9]/g, '');
+  const isSameJournalName = (a, b) => {
+    if (!a || !b) return false;
+    const s1 = String(a).trim().toLowerCase();
+    const s2 = String(b).trim().toLowerCase();
+    if (s1 === s2) return true;
+    const p1 = s1.replace(/[\u2018\u2019`']/g, "'").replace(/[\u2013\u2014]/g, '-').replace(/\s*:\s*/g, ': ').replace(/\s+/g, ' ');
+    const p2 = s2.replace(/[\u2018\u2019`']/g, "'").replace(/[\u2013\u2014]/g, '-').replace(/\s*:\s*/g, ': ').replace(/\s+/g, ' ');
+    if (p1 === p2) return true;
+    const c1 = normCleanJournalName(s1);
+    const c2 = normCleanJournalName(s2);
+    return c1.length >= 3 && c1 === c2;
+  };
+  const findDuplicateJournal = (nama, curId) => {
+    if (!nama || !nama.trim()) return null;
+    const list = S.D?.Jurnal || [];
+    return list.find(j => (!curId || String(j.id) !== String(curId)) && isSameJournalName(j.nama, nama)) || null;
+  };
+  const findSimilarJournal = (nama, curId) => {
+    if (!nama || nama.trim().length < 3) return null;
+    const targetClean = normCleanJournalName(nama);
+    if (targetClean.length < 4) return null;
+    const list = S.D?.Jurnal || [];
+    return list.find(j => {
+      if (curId && String(j.id) === String(curId)) return false;
+      const jClean = normCleanJournalName(j.nama);
+      if (jClean.length >= 4 && (jClean.includes(targetClean) || targetClean.includes(jClean)) && jClean !== targetClean) {
+        return true;
+      }
+      return false;
+    }) || null;
+  };
+
+  function checkJournalDuplicateLive(inputEl) {
+    const f = inputEl.form;
+    if (!f || f.dataset.e !== 'Jurnal') return;
+    const curId = f.dataset.id || '';
+    const val = inputEl.value.trim();
+    const notice = $('#jurnal-dup-notice');
+    if (!notice) return;
+    
+    if (!val) {
+      notice.style.display = 'none';
+      inputEl.style.borderColor = '';
+      return;
+    }
+    
+    const dup = findDuplicateJournal(val, curId);
+    if (dup) {
+      inputEl.style.borderColor = '#EF4444';
+      notice.style.display = 'block';
+      notice.style.background = '#FEF2F2';
+      notice.style.border = '1px solid #FCA5A5';
+      notice.style.color = '#991B1B';
+      notice.innerHTML = `⛔ <b>Data Sudah Ada di Database:</b> Jurnal "<b>${esc(dup.nama)}</b>" (${esc(akr(dup))}, ${esc(dup.penerbit || 'Penerbit')}) sudah pernah diinput. Sistem akan menolak penambahan data duplikat ini.`;
+      return;
+    }
+    
+    const sim = findSimilarJournal(val, curId);
+    if (sim) {
+      inputEl.style.borderColor = '#F59E0B';
+      notice.style.display = 'block';
+      notice.style.background = '#FFFBEB';
+      notice.style.border = '1px solid #FCD34D';
+      notice.style.color = '#92400E';
+      notice.innerHTML = `ℹ️ <b>Peringatan Kemiripan:</b> Ditemukan jurnal dengan nama serupa di database: "<b>${esc(sim.nama)}</b>" (${esc(akr(sim))}, ${esc(sim.penerbit || 'Penerbit')}). Mohon pastikan bukan jurnal yang sama.`;
+      return;
+    }
+    
+    notice.style.display = 'none';
+    inputEl.style.borderColor = '';
+  }
   const formatImgUrl = url => {
     if (!url) return '';
     let u = String(url).trim();
@@ -1154,6 +1228,9 @@
               const v = rec[f[0]] ?? '', n = `name="${f[0]}"`;
               if (f[2] === 'check') return `<label style="font-weight:600;display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer"><input type="checkbox" ${n} ${rec[f[0]] ? 'checked' : ''}> ${f[1]}</label>`;
               let ctl = f[2] === 'textarea' ? `<textarea ${n}>${esc(v)}</textarea>` : f[2] === 'select' ? `<select ${n}>${opts(f, v)}</select>` : `<input class="in" ${n} type="${f[2]}" value="${esc(v)}">`;
+              if (ent === 'Jurnal' && f[0] === 'nama') {
+                ctl += `<div id="jurnal-dup-notice" style="display:none;margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12px;line-height:1.4"></div>`;
+              }
               if (ent === 'Jurnal' && f[0] === 'thumbnail') {
                 ctl += `
                   <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
@@ -1374,6 +1451,9 @@
     else if (t.id === 'oc') { S.onlyCheck = t.checked; draw(); }
     else if (t.id === 'pub_perpage') { S.pubJurPerPage = Number(t.value) || 12; S.pubJurPage = 1; draw(); }
     else if (t.id === 'admin_perpage') { S.adminJurPerPage = Number(t.value) || 10; S.adminJurPage = 1; draw(); }
+    else if (t.name === 'nama' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Jurnal') {
+      checkJournalDuplicateLive(t);
+    }
   });
 
   let tm;
@@ -1391,6 +1471,8 @@
         }
         draw();
       }, 200);
+    } else if (t.name === 'nama' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Jurnal') {
+      checkJournalDuplicateLive(t);
     }
   });
 
@@ -1454,7 +1536,33 @@
     else if (f.id === 'mf') {
       const ent = f.dataset.e, old = f.dataset.id ? S.D[ent].find(x => x.id === f.dataset.id) : {}, rec = { ...old, id: f.dataset.id || uid() };
       FIELDS[ent].forEach(fl => { const el = f.elements[fl[0]]; rec[fl[0]] = fl[2] === 'check' ? el.checked : el.value.trim(); });
-      if (ent === 'Jurnal' && rec.tipe_biaya === 'Gratis') rec.apc = '';
+      if (ent === 'Jurnal') {
+        if (!rec.nama) {
+          toast('Nama jurnal wajib diisi', true);
+          const nameInput = f.querySelector('[name=nama]');
+          if (nameInput) nameInput.focus();
+          return;
+        }
+        const dup = findDuplicateJournal(rec.nama, f.dataset.id);
+        if (dup) {
+          toast(`Ditolak: Jurnal "${dup.nama}" sudah ada di database!`, true);
+          const nameInput = f.querySelector('[name=nama]');
+          if (nameInput) {
+            nameInput.focus();
+            nameInput.style.borderColor = '#EF4444';
+          }
+          const notice = $('#jurnal-dup-notice');
+          if (notice) {
+            notice.style.display = 'block';
+            notice.style.background = '#FEF2F2';
+            notice.style.border = '1px solid #FCA5A5';
+            notice.style.color = '#991B1B';
+            notice.innerHTML = `⛔ <b>Data Duplikat Ditolak:</b> Jurnal "<b>${esc(dup.nama)}</b>" (${esc(akr(dup))}, ${esc(dup.penerbit || 'Penerbit')}) sudah ada di database. Sistem menolak penambahan data duplikat ini.`;
+          }
+          return;
+        }
+        if (rec.tipe_biaya === 'Gratis') rec.apc = '';
+      }
       closeModal(); await upsert(ent, rec); toast('Data berhasil disimpan');
     }
     else if (f.id === 'sf') {
