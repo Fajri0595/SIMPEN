@@ -47,28 +47,69 @@ Folder kerja frontend = **folder hasil ekstrak ZIP `simpen-frontend`** (di dalam
 
 ## Catatan penting
 
-- Data publik hanya memuat entri bertanda *Tampil Publik*; catatan, feedback reviewer, dan nomor WA tidak pernah dikirim ke publik.
+- Data publik hanya memuat entri bertanda *Tampil Publik*; catatan, feedback reviewer, kredensial OJS, dan nomor WA tidak pernah dikirim ke publik.
 - Sesi admin berlaku 8 jam. Tombol *Keluar* menghapus sesi di browser. Jika sandi atau perangkat dicurigai bocor, ganti sandi dengan `aturKataSandiAdmin` lalu jalankan `cabutSemuaSesi` — semua sesi lama langsung tidak sah.
-- Ekspor saat ini berformat **CSV** (dibuka langsung oleh Excel). Ekspor PDF belum tersedia.
-- Perpindahan status di Kanban memakai dropdown pada kartu (belum drag-and-drop).
-- Kuota gratis Fonnte dapat berubah; cek di akun Fonnte Anda.
+- Format laporan BKD tersedia dalam **Cetak PDF Resmi Standar Institusi** (A4 dengan Kop, NIDN/NIP, Rubrik KUM, dan Kolom Asesor) serta **Ekspor Excel / CSV BKD**.
+- Perpindahan status naskah di papan Kanban mendukung **Drag-and-Drop** langsung.
+- Akses mobile dilengkapi **Bottom Navigation Bar** dan dukungan **PWA** (bisa dipasang ke homescreen smartphone).
 
 ---
 
-## Memperbarui aplikasi yang sudah terpasang (revisi katalog jurnal)
+## 🔄 Panduan Memperbarui Aplikasi (Update Fitur BKD, KUM, & Mobile PWA)
 
-Lakukan **berurutan**. Data lama Anda tidak hilang: kolom baru ditambahkan di sebelah kanan, dan jurnal lama yang punya isian "Sinta 2" di kolom lama tetap terbaca sebagai Sinta 2.
+Lakukan langkah-langkah berikut secara berurutan agar pembaruan berjalan mulus tanpa merusak data yang sudah ada:
 
-**A. Backend**
-1. Buka proyek Apps Script → buka `Kode.gs` → **ganti seluruh isinya** dengan `Kode.gs` terbaru. Simpan (`Ctrl + S`).
-2. **Pertahankan** pengaturan yang sudah ada: sandi admin dan `FONNTE_TOKEN` tersimpan di Properti Skrip, bukan di kode, jadi tidak terhapus.
-3. Pilih fungsi **`perbaruiHeaderSheet`** di dropdown → **Jalankan** (sekali). Log harus menampilkan ✅. Fungsi ini hanya menulis judul kolom baris 1, data tidak disentuh.
-4. **Deploy → Kelola deployment → ikon pensil → Versi: Versi baru → Deploy**. URL `/exec` tetap sama, tidak perlu mengubah `config.js`.
+### Langkah 1: Update Backend (Google Apps Script)
+1. Buka [script.google.com](https://script.google.com) dan buka proyek **SIMPEN** Anda.
+2. Buka berkas `Kode.gs` (atau `Code.gs`), **hapus isinya lalu tempelkan seluruh kode dari berkas `Kode.js` lokal terbaru**.
+3. Simpan perubahan dengan menekan `Ctrl + S`.
+4. Lakukan deploy versi baru:
+   * Klik tombol biru **Deploy** (kanan atas) → **Kelola deployment** (*Manage deployments*).
+   * Klik **ikon pensil** (Edit) pada deployment aktif Anda.
+   * Pada dropdown **Versi**, pilih **Versi baru** (*New version*).
+   * Klik tombol **Deploy** lalu **Selesai**.
+   > **Catatan Database:** Anda **TIDAK PERLU** mengedit tabel Google Sheet secara manual. Backend memiliki fitur *auto-migration* yang otomatis menambahkan kolom-kolom baru (`semester_bkd`, `peran_penulis`, `total_penulis`, `sks_bkd`, `nidn`, `nip`, `jabatan_fungsional`, `prodi`, `fakultas`, dll.) saat data disimpan, sehingga data lama tetap aman.
 
-**B. Frontend**
-1. Ekstrak `simpen-frontend.zip` terbaru. Buka `js/config.js` dan pastikan `GAS_URL` berisi URL `/exec` Anda (file di ZIP berisi placeholder, jadi isi lagi).
-2. Salin hasil ekstrak menimpa isi folder repository Anda, lalu di PowerShell: `git add .` → `git commit -m "Revisi katalog jurnal"` → `git push`.
-3. Tunggu 1–2 menit, buka situs, tekan `Ctrl + Shift + R`.
+### Langkah 2: Update Frontend ke GitHub Pages
+1. Pastikan berkas di folder lokal sudah mencakup:
+   * `js/app.js` (Logika BKD, kalkulator KUM, bottom nav)
+   * `css/style.css` (Tampilan mobile bottom nav & layout cetak BKD)
+   * `index.html` (Meta tags PWA)
+   * `manifest.json` (Konfigurasi instalasi aplikasi mobile)
+2. Buka PowerShell / Terminal di folder proyek SIMPEN, lalu jalankan:
+   ```powershell
+   git add .
+   git commit -m "feat: integrasi laporan BKD semester, kalkulator KUM, bottom nav mobile, dan PWA"
+   git push origin main
+   ```
+3. Tunggu 1–2 menit hingga GitHub Pages selesai memproses *build*.
 
-**C. Isi ulang data jurnal (disarankan)**
-Buka Katalog Jurnal → **Ubah Data** pada tiap jurnal, lalu atur **Jenis Kampus**, **Rumpun Ilmu**, dan **Akreditasi**. Sampai itu dilakukan, jurnal lama dianggap PTN dan Non-Sinta di tampilan publik.
+### Langkah 3: Pengisian Identitas BKD Dosen (Di Panel Admin)
+1. Buka situs SIMPEN di browser Anda (tekan `Ctrl + F5` atau `Ctrl + Shift + R` untuk memastikan browser memuat file terbaru).
+2. Masuk ke **Panel Admin** → buka menu **Pengaturan**.
+3. Isi bagian baru **Identitas BKD Dosen**:
+   * **NIDN / NIDK** dan **NIP / NPK Pegawai**
+   * **Jabatan Fungsional** (Asisten Ahli / Lektor / Lektor Kepala / Guru Besar)
+   * **Program Studi** dan **Fakultas / Unit Kerja**
+   * (Opsional) Nama Asesor BKD 1 & 2 serta Pimpinan Fakultas (Dekan/Kaprodi)
+4. Klik **Simpan Pengaturan**.
+
+### Langkah 4: Menyesuaikan Data Naskah untuk Pelaporan BKD
+1. Buka menu **Submission**.
+2. Klik tombol **Ubah** pada artikel ilmiah yang ingin dilaporkan:
+   * Pilih **Periode Semester BKD** (misal: `2024/2025 Genap`, `2025/2026 Ganjil`, dll.).
+   * Pilih **Peran / Posisi Penulis** (Penulis Pertama & Korespondensi, Penulis Tunggal, Penulis Pertama, Penulis Korespondensi, atau Penulis Anggota).
+   * Masukkan **Jumlah Total Penulis**.
+   * Perhatikan kotak hijau di bawah: estimasi perolehan **KUM** dan beban **SKS BKD** akan langsung terhitung secara otomatis.
+3. Klik **Simpan Perubahan**.
+
+### Langkah 5: Mengunduh Laporan BKD Semester
+1. Di Dashboard atau menu Submission, klik tombol **"Laporan BKD & Rekapitulasi KUM"**.
+2. Pada modal yang muncul, pilih **Semester BKD** yang bersangkutan dan filter status naskah.
+3. Klik **🖨️ Cetak / PDF Resmi** untuk membuka lembar laporan A4 formal (siap cetak atau pilih *Save as PDF*), atau klik **📊 Unduh Excel / CSV** untuk mengunduh rekap spreadsheet.
+
+### Langkah 6: Memasang di Smartphone (Mobile PWA)
+1. Buka URL GitHub Pages SIMPEN melalui browser di ponsel (Chrome Android atau Safari iOS).
+2. Perhatikan bar navigasi bawah (*Bottom Navigation*) yang langsung aktif untuk memudahkan kontrol dengan jempol.
+3. Buka menu browser ponsel → pilih **"Tambahkan ke Layar Utama"** (*Add to Home Screen*) atau **"Install App"**.
+4. Ikon toga SIMPEN akan muncul di daftar aplikasi ponsel dan bisa dibuka langsung layaknya aplikasi native.

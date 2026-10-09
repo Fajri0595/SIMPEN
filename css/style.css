@@ -1262,34 +1262,84 @@ tr:hover td {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* Mobile Bottom Navigation Bar (Desktop Default: Hidden) */
+.mobile-bottom-nav {
+  display: none;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 768px) {
   .adm {
     grid-template-columns: 1fr;
   }
   .side {
-    position: static;
-    height: auto;
+    display: none !important;
+  }
+  .mobile-bottom-nav {
     display: flex;
-    overflow-x: auto;
-    gap: 8px;
-    padding: 12px;
-    flex-direction: row;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #0F172A;
+    border-top: 1px solid #1E293B;
+    z-index: 100;
+    justify-content: space-around;
     align-items: center;
+    padding: 0 4px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  .side .brand, .side-footer {
-    display: none;
+  .mb-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 0;
+    cursor: pointer;
+    position: relative;
+    transition: var(--trans);
+    min-height: auto;
+    font-family: inherit;
   }
-  .side-nav {
-    flex-direction: row;
+  .mb-btn svg {
+    width: 18px;
+    height: 18px;
   }
-  .side button {
-    width: auto;
-    white-space: nowrap;
-    padding: 8px 12px;
+  .mb-btn:hover {
+    color: #F8FAFC;
+  }
+  .mb-btn.active {
+    color: #38BDF8;
+  }
+  .mb-btn.active svg {
+    stroke: #38BDF8;
+  }
+  .mb-badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 16px);
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: var(--r-full);
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    padding: 0 4px;
   }
   .main {
-    padding: 20px 16px;
+    padding: 16px 14px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .grid2 {
     grid-template-columns: 1fr;

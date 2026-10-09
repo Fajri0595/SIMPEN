@@ -52,7 +52,30 @@
   })();
   const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, q: '', yr: '', jq: '', jbiaya: '', subv: 'kanban', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid', pubJurPage: 1, pubJurPerPage: 12, adminJurPage: 1, adminJurPerPage: 10 };
 
-  const cfg = () => Object.assign({ nama: '', afiliasi: '', wa: '', foto: '', link_sinta: '', link_scholar: '', link_scopus: '', ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00' }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
+  const SEMESTERS = [
+    ['', '— Pilih Semester BKD —'],
+    ['2025/2026 Genap', '2025/2026 Genap'],
+    ['2025/2026 Ganjil', '2025/2026 Ganjil'],
+    ['2024/2025 Genap', '2024/2025 Genap'],
+    ['2024/2025 Ganjil', '2024/2025 Ganjil'],
+    ['2023/2024 Genap', '2023/2024 Genap'],
+    ['2023/2024 Ganjil', '2023/2024 Ganjil']
+  ];
+
+  const PERAN_PENULIS = [
+    ['Penulis Pertama & Korespondensi', 'Penulis Pertama & Korespondensi (Porsi 60%)'],
+    ['Penulis Tunggal', 'Penulis Tunggal (Porsi 100%)'],
+    ['Penulis Pertama', 'Penulis Pertama (Porsi 50% / 60%)'],
+    ['Penulis Korespondensi', 'Penulis Korespondensi (Porsi 40%)'],
+    ['Penulis Anggota', 'Penulis Anggota (Porsi 40% dibagi anggota)']
+  ];
+
+  const cfg = () => Object.assign({
+    nama: '', afiliasi: '', wa: '', foto: '', link_sinta: '', link_scholar: '', link_scopus: '',
+    ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00',
+    nidn: '', nip: '', jabatan_fungsional: 'Lektor', prodi: '', fakultas: '',
+    nama_asesor_1: '', nama_asesor_2: '', nama_pimpinan: ''
+  }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
   const jname = id => ((S.D?.Jurnal || []).find(j => j.id === id) || {}).nama || '—';
   const perluCek = s => PROSES.includes(s.status) && s.tgl_cek && -dayDiff(s.tgl_cek) > Number(cfg().ambang_cek);
   const cfpNear = c => c.status !== 'Sudah Submit' && c.status !== 'Ditutup' && dayDiff(c.deadline) >= 0 && dayDiff(c.deadline) <= 7;
@@ -67,6 +90,68 @@
   const akr = j => { const m = String((j && (j.akreditasi || j.indeks)) || '').match(/sinta\s*([1-4])\b/i); return m ? 'Sinta ' + m[1] : 'Non-Sinta'; };
   const AKC = { 'Sinta 1': 'am', 'Sinta 2': 'bl', 'Sinta 3': 'ix', 'Sinta 4': 'gr', 'Non-Sinta': 'sl' };
   const akrBadge = j => `<span class="bd ${AKC[akr(j)]}" style="text-transform:uppercase;font-size:11px">${akr(j)}</span>`;
+
+  // Kalkulasi Angka Kredit (KUM) & Beban SKS BKD
+  const hitungKumBkd = (s, j) => {
+    const akreditasi = akr(j);
+    let kumMaks = 10;
+    let labelKat = 'Jurnal Nasional';
+
+    if (/sinta\s*1\b/i.test(akreditasi)) { kumMaks = 25; labelKat = 'Jurnal Nasional Terakreditasi SINTA 1'; }
+    else if (/sinta\s*2\b/i.test(akreditasi)) { kumMaks = 25; labelKat = 'Jurnal Nasional Terakreditasi SINTA 2'; }
+    else if (/sinta\s*3\b/i.test(akreditasi)) { kumMaks = 20; labelKat = 'Jurnal Nasional Terakreditasi SINTA 3'; }
+    else if (/sinta\s*4\b/i.test(akreditasi)) { kumMaks = 20; labelKat = 'Jurnal Nasional Terakreditasi SINTA 4'; }
+    else if (/sinta\s*5\b/i.test(akreditasi)) { kumMaks = 15; labelKat = 'Jurnal Nasional Terakreditasi SINTA 5'; }
+    else if (/sinta\s*6\b/i.test(akreditasi)) { kumMaks = 15; labelKat = 'Jurnal Nasional Terakreditasi SINTA 6'; }
+    else if (/scopus|wos|internasional bereputasi/i.test((j?.nama || '') + ' ' + (s?.catatan || ''))) {
+      kumMaks = 40; labelKat = 'Jurnal Internasional Bereputasi';
+    } else if (/internasional/i.test((j?.nama || ''))) {
+      kumMaks = 30; labelKat = 'Jurnal Internasional';
+    } else {
+      labelKat = 'Jurnal Nasional (Non-Akreditasi)';
+    }
+
+    const peran = s?.peran_penulis || 'Penulis Pertama & Korespondensi';
+    const total = Math.max(1, parseInt(s?.total_penulis || 1, 10));
+    let porsi = 0.6;
+    let porsiTxt = '60%';
+
+    if (peran === 'Penulis Tunggal' || total === 1) {
+      porsi = 1.0;
+      porsiTxt = '100%';
+    } else if (peran === 'Penulis Pertama & Korespondensi') {
+      porsi = 0.6;
+      porsiTxt = '60%';
+    } else if (peran === 'Penulis Pertama') {
+      porsi = 0.5;
+      porsiTxt = '50%';
+    } else if (peran === 'Penulis Korespondensi') {
+      porsi = 0.4;
+      porsiTxt = '40%';
+    } else if (peran === 'Penulis Anggota') {
+      const nAnggota = Math.max(1, total - 1);
+      porsi = 0.4 / nAnggota;
+      porsiTxt = `40% / ${nAnggota} (${(porsi * 100).toFixed(1)}%)`;
+    }
+
+    const kumDidapat = Number((kumMaks * porsi).toFixed(2));
+    let sks = s?.sks_bkd ? parseFloat(s.sks_bkd) : 0;
+    if (!sks || isNaN(sks)) {
+      if (kumMaks >= 25) sks = 3;
+      else if (kumMaks >= 20) sks = 2;
+      else sks = 1.5;
+    }
+
+    return {
+      kumMaks,
+      porsi,
+      porsiTxt,
+      kumDidapat,
+      sks: Number(sks.toFixed(2)),
+      labelKat
+    };
+  };
+
   const apcVal = j => {
     if (j.tipe_biaya === 'Gratis') return { t: 'Gratis', c: '#047857' };
     const n = String(j.apc || '').replace(/[.\s]/g, '');
@@ -650,6 +735,32 @@
           </div>
         </aside>
         <main class="main">${body}</main>
+        
+        <!-- Bottom Navigation Bar Mobile -->
+        <nav class="mobile-bottom-nav" aria-label="Navigasi Bawah Mobile">
+          <button type="button" class="mb-btn ${S.page === 'dash' ? 'active' : ''}" data-a="nav" data-id="dash">
+            ${SVG.dash}
+            <span>Beranda</span>
+          </button>
+          <button type="button" class="mb-btn ${S.page === 'pen' ? 'active' : ''}" data-a="nav" data-id="pen">
+            ${SVG.pen}
+            <span>Penelitian</span>
+          </button>
+          <button type="button" class="mb-btn ${S.page === 'sub' ? 'active' : ''}" data-a="nav" data-id="sub">
+            ${SVG.sub}
+            <span>Naskah</span>
+            ${cnt.sub ? `<span class="mb-badge">${cnt.sub}</span>` : ''}
+          </button>
+          <button type="button" class="mb-btn ${S.page === 'jur' ? 'active' : ''}" data-a="nav" data-id="jur">
+            ${SVG.jur}
+            <span>Jurnal</span>
+          </button>
+          <button type="button" class="mb-btn ${['cfp', 'set'].includes(S.page) ? 'active' : ''}" data-a="mobileMenu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span>Menu</span>
+            ${cnt.cfp ? `<span class="mb-badge">${cnt.cfp}</span>` : ''}
+          </button>
+        </nav>
       </div>
     `;
   }
@@ -913,6 +1024,8 @@
 
   function subCard(s) {
     const pc = perluCek(s), dl = dayDiff(s.deadline_respon);
+    const j = (S.D?.Jurnal || []).find(x => x.id === s.id_jurnal);
+    const kumInfo = hitungKumBkd(s, j);
     const ojsInfo = s.akun_ojs ? `
       <div style="margin-top:6px;padding:5px 8px;background:#F1F5F9;border-radius:6px;font-size:11.5px;display:flex;justify-content:space-between;align-items:center;gap:6px">
         <span class="mono" style="font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Akun OJS: ${esc(s.akun_ojs)}">🔑 ${esc(s.akun_ojs)}</span>
@@ -930,6 +1043,10 @@
         ${pc ? `<div style="margin-bottom:6px"><span class="bd am">⏱ Perlu dicek · ${-dayDiff(s.tgl_cek)} hr</span></div>` : ''}
         <h3 style="font-size:14px;margin:4px 0 6px;line-height:1.3">${esc(s.judul)}</h3>
         <div class="mu" style="font-size:12.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px">${SVG.book} ${esc(jname(s.id_jurnal))}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin:4px 0">
+          ${s.semester_bkd ? `<span class="bd bl" style="font-size:10px">🗓️ ${esc(s.semester_bkd)}</span>` : ''}
+          <span class="bd gr" style="font-size:10px">KUM: ${kumInfo.kumDidapat} (${kumInfo.porsiTxt})</span>
+        </div>
         ${ojsInfo}
         <div class="mu" style="font-size:11.5px;margin-top:6px">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>
         ${dl != null && PROSES.includes(s.status) ? `<div style="margin-top:6px;font-size:12px">Batas revisi: ${pill(dl)}</div>` : ''}
@@ -954,6 +1071,7 @@
         <button class="btn sm ${S.subv === 'tabel' ? 'pri' : ''}" data-a="subv" data-id="tabel">Tabel Data</button>
       </div>
     `;
+    const J = Object.fromEntries((S.D?.Jurnal || []).map(j => [j.id, j]));
     const body = S.subv === 'kanban'
       ? `<div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:16px">${STAT.map(st => `
           <div class="kanban-col" data-drop-status="${st}">
@@ -971,8 +1089,9 @@
               <tr>
                 <th>Judul Naskah</th>
                 <th>Jurnal Sasaran</th>
-                <th style="min-width:120px">Akun OJS</th>
-                <th style="min-width:130px">Password</th>
+                <th>Semester &amp; KUM</th>
+                <th style="min-width:110px">Akun OJS</th>
+                <th style="min-width:120px">Password</th>
                 <th>Status</th>
                 <th>Submit</th>
                 <th>Cek Terakhir</th>
@@ -980,7 +1099,9 @@
               </tr>
             </thead>
             <tbody>
-              ${L.map(s => `
+              ${L.map(s => {
+                const k = hitungKumBkd(s, J[s.id_jurnal]);
+                return `
                 <tr>
                   <td>
                     <b style="color:var(--tx);font-size:14px">${esc(s.judul)}</b>
@@ -988,12 +1109,16 @@
                   </td>
                   <td>${esc(jname(s.id_jurnal))}</td>
                   <td>
-                    ${s.akun_ojs ? `<span class="mono" style="font-size:12.5px;font-weight:600;color:var(--tx)">${esc(s.akun_ojs)}</span>` : '<span class="mu" style="font-size:12px">—</span>'}
+                    ${s.semester_bkd ? `<span class="bd bl" style="font-size:10.5px">${esc(s.semester_bkd)}</span>` : '<span class="mu" style="font-size:11px">—</span>'}
+                    <div style="font-weight:700;color:#1E3A8A;font-size:11px;margin-top:2px">${k.kumDidapat} KUM <small class="mu">(${k.sks} SKS)</small></div>
+                  </td>
+                  <td>
+                    ${s.akun_ojs ? `<span class="mono" style="font-size:12px;font-weight:600;color:var(--tx)">${esc(s.akun_ojs)}</span>` : '<span class="mu" style="font-size:12px">—</span>'}
                   </td>
                   <td>
                     ${s.password_ojs ? `
                       <div class="pwd-cell" style="display:inline-flex;align-items:center;gap:6px">
-                        <span class="pwd-text mono" data-val="${esc(s.password_ojs)}" style="font-size:12px;letter-spacing:1px;font-weight:600;color:var(--tx)">••••••</span>
+                        <span class="pwd-text mono" data-val="${esc(s.password_ojs)}" style="font-size:11.5px;letter-spacing:1px;font-weight:600;color:var(--tx)">••••••</span>
                         <button type="button" class="btn sm" data-a="togglePwd" title="Lihat/Sembunyikan Password" style="padding:2px 6px;min-height:24px;border:none;background:transparent;cursor:pointer;color:#2563EB;display:inline-flex;align-items:center">
                           ${SVG.eye}
                         </button>
@@ -1014,7 +1139,7 @@
                     <button class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}">${SVG.trash}</button>
                   </td>
                 </tr>
-              `).join('') || '<tr><td colspan="8" class="mu" style="text-align:center;padding:24px">Belum ada submission.</td></tr>'}
+              `;}).join('') || '<tr><td colspan="9" class="mu" style="text-align:center;padding:24px">Belum ada submission.</td></tr>'}
             </tbody>
           </table>
         </div>
@@ -1022,6 +1147,7 @@
 
     return head('Submission Tracker', 'Pantau perkembangan manuskrip artikel ilmiah dari draft hingga terbit', `
       ${tgl}
+      <button class="btn" data-a="pdfBkd">${SVG.print} Laporan BKD &amp; KUM</button>
       <button class="btn" data-a="csv" data-e="Submission">${SVG.download} Ekspor Excel</button>
       <button class="btn pri" data-a="add" data-e="Submission">${SVG.plus} Catat Submission Baru</button>
     `) + `
@@ -1088,6 +1214,48 @@
             
             <label>Afiliasi / Universitas</label>
             <input class="in" name="afiliasi" value="${esc(c.afiliasi)}" placeholder="Fakultas / Universitas">
+
+            <h4 style="margin:20px 0 10px;color:#1E40AF;border-bottom:1px solid var(--bd);padding-bottom:6px">Identitas BKD Dosen (Kop &amp; Lembar Pengesahan Laporan)</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
+              <div>
+                <label>NIDN / NIDK</label>
+                <input class="in" name="nidn" value="${esc(c.nidn || '')}" placeholder="Contoh: 0012058501">
+              </div>
+              <div>
+                <label>NIP / NPK Pegawai</label>
+                <input class="in" name="nip" value="${esc(c.nip || '')}" placeholder="Contoh: 198505122010121001">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-top:6px">
+              <div>
+                <label>Jabatan Fungsional</label>
+                <select class="in" name="jabatan_fungsional">
+                  ${['Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar', 'Tenaga Pengajar'].map(j => `<option value="${j}" ${(c.jabatan_fungsional || 'Lektor') === j ? 'selected' : ''}>${j}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label>Program Studi</label>
+                <input class="in" name="prodi" value="${esc(c.prodi || '')}" placeholder="Contoh: Teknik Informatika">
+              </div>
+            </div>
+
+            <label style="margin-top:8px">Fakultas / Unit Kerja</label>
+            <input class="in" name="fakultas" value="${esc(c.fakultas || '')}" placeholder="Contoh: Fakultas Ilmu Komputer">
+
+            <h4 style="margin:20px 0 10px;color:#1E40AF;border-bottom:1px solid var(--bd);padding-bottom:6px">Data Pengesahan &amp; Asesor BKD (Opsional)</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
+              <div>
+                <label>Nama Asesor BKD 1</label>
+                <input class="in" name="nama_asesor_1" value="${esc(c.nama_asesor_1 || '')}" placeholder="Prof. Dr. ..., M.Sc.">
+              </div>
+              <div>
+                <label>Nama Asesor BKD 2</label>
+                <input class="in" name="nama_asesor_2" value="${esc(c.nama_asesor_2 || '')}" placeholder="Dr. ..., M.Kom.">
+              </div>
+            </div>
+            <label style="margin-top:8px">Pimpinan Fakultas / Dekan / Kaprodi</label>
+            <input class="in" name="nama_pimpinan" value="${esc(c.nama_pimpinan || '')}" placeholder="Dr. ..., S.T., M.T. (Dekan)">
 
             <label>URL Foto Profil Peneliti (Opsional)</label>
             <div style="display:flex;gap:12px;align-items:center;margin-top:4px">
@@ -1161,6 +1329,8 @@
       ['kolaborator', 'Kolaborator (pisahkan titik koma)', 'textarea'],
       ['tanggal_mulai', 'Tanggal Mulai', 'date'],
       ['status', 'Status', 'select', [['Draft'], ['Berjalan'], ['Selesai']]],
+      ['semester_bkd', 'Periode Semester BKD (Opsional)', 'select', SEMESTERS],
+      ['sks_bkd', 'Beban SKS BKD (Opsional, default: 2 s.d 3)', 'text'],
       ['link_berkas', 'Tautan Folder Google Drive', 'url'],
       ['link_pdf', 'Tautan Dokumen PDF Naskah', 'url'],
       ['catatan', 'Catatan Internal', 'textarea'],
@@ -1184,6 +1354,10 @@
       ['id_penelitian', 'Penelitian Induk / Payung Riset (Opsional)', 'select', 'pen'],
       ['judul', 'Judul Naskah Artikel Ilmiah *', 'text'],
       ['id_jurnal', 'Jurnal Sasaran Tujuan', 'select', 'jur'],
+      ['semester_bkd', 'Periode Semester BKD', 'select', SEMESTERS],
+      ['peran_penulis', 'Peran / Posisi Penulis (KUM BKD)', 'select', PERAN_PENULIS],
+      ['total_penulis', 'Jumlah Total Penulis Naskah', 'number'],
+      ['sks_bkd', 'Beban SKS BKD (Opsional, otomatis bila kosong)', 'text'],
       ['akun_ojs', 'Akun / Username OJS Jurnal (Opsional)', 'text'],
       ['password_ojs', 'Password Akun OJS Jurnal (Opsional)', 'text'],
       ['status', 'Status Manuskrip', 'select', STAT.map(x => [x])],
@@ -1211,13 +1385,39 @@
   const opts = (f, v) => {
     let o = f[3];
     if (o === 'pen') o = [['', '— Tanpa Penelitian Induk (Artikel Mandiri) —'], ...S.D.Penelitian.map(p => [p.id, p.judul])];
-    if (o === 'jur') o = [['', '— Pilih Jurnal Sasaran —'], ...S.D.Jurnal.map(j => [j.id, j.nama])];
-    return o.map(([a, b]) => `<option value="${esc(a)}" ${a === v ? 'selected' : ''}>${esc(b || a)}</option>`).join('');
+    else if (o === 'jur') o = [['', '— Pilih Jurnal Sasaran —'], ...S.D.Jurnal.map(j => [j.id, j.nama])];
+    else if (Array.isArray(o)) {
+      o = o.slice();
+      if (v && !o.some(([a]) => a === v)) o.unshift([v, v]);
+    }
+    return (o || []).map(([a, b]) => `<option value="${esc(a)}" ${a === v ? 'selected' : ''}>${esc(b || a)}</option>`).join('');
   };
+
+  function updateSubmissionKumInForm() {
+    const f = $('#mf');
+    if (!f || f.dataset.e !== 'Submission') return;
+    const box = $('#sub-kum-preview');
+    if (!box) return;
+    const jurId = f.querySelector('[name=id_jurnal]')?.value;
+    const peran = f.querySelector('[name=peran_penulis]')?.value || 'Penulis Pertama & Korespondensi';
+    const total = parseInt(f.querySelector('[name=total_penulis]')?.value || 1, 10);
+    const j = (S.D?.Jurnal || []).find(x => x.id === jurId);
+    const k = hitungKumBkd({ peran_penulis: peran, total_penulis: total }, j);
+    box.innerHTML = `
+      <div style="font-weight:700;margin-bottom:4px;color:#1E40AF">📊 Estimasi Perhitungan Angka Kredit (KUM) BKD:</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px">
+        <span>Kategori: <b>${esc(k.labelKat)}</b> (KUM Maks: ${k.kumMaks})</span>
+        <span>Porsi: <b>${esc(k.porsiTxt)}</b></span>
+        <span>Perolehan KUM: <b style="color:#1E3A8A;font-size:14px">${k.kumDidapat.toFixed(2)} KUM</b></span>
+        <span>Estimasi SKS BKD: <b style="color:#047857">${k.sks} SKS</b></span>
+      </div>
+    `;
+  }
 
   function openForm(ent, rec) {
     rec = rec || {};
     if (ent === 'Jurnal') rec = { jenis_kampus: 'PTN', ...rec, akreditasi: akr(rec) };
+    if (ent === 'Submission' && !rec.peran_penulis) rec = { peran_penulis: 'Penulis Pertama & Korespondensi', total_penulis: 1, ...rec };
     openModal(`
       <div class="ov">
         <div class="mod">
@@ -1244,6 +1444,9 @@
               }
               return `<label>${f[1]}</label>${ctl}`;
             }).join('')}
+            ${ent === 'Submission' ? `
+              <div id="sub-kum-preview" class="card" style="margin-top:14px;padding:12px 14px;background:#F0FDF4;border:1px solid #BBF7D0;font-size:12px;color:#166534"></div>
+            ` : ''}
             <div class="act">
               <button type="button" class="btn" data-a="mclose">Batal</button>
               <button class="btn pri">Simpan Perubahan</button>
@@ -1252,6 +1455,9 @@
         </div>
       </div>
     `);
+    if (ent === 'Submission') {
+      setTimeout(updateSubmissionKumInForm, 30);
+    }
   }
 
   // ============ DATA OPS (Optimistic UI) ============
@@ -1279,47 +1485,485 @@
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv' })); a.download = `SIMPEN-${ent}-${today()}.csv`; a.click();
   }
 
-  function exportBKD() {
+  // ============ SISTEM LAPORAN BKD & REKAP KUM ============
+  function updateBkdModalPreview() {
     const D = S.D; if (!D) return;
-    const c = (D.Pengaturan || [])[0] || {};
+    const sem = $('#bkd_sem')?.value || '';
+    const stOpt = $('#bkd_status')?.value || 'Published';
+    const incPen = $('#bkd_inc_pen')?.checked ?? true;
+    const J = Object.fromEntries((D.Jurnal || []).map(j => [j.id, j]));
+
+    let subs = D.Submission || [];
+    if (sem) subs = subs.filter(s => (s.semester_bkd || '').toLowerCase() === sem.toLowerCase());
+    if (stOpt === 'Published') subs = subs.filter(s => s.status === 'Published');
+    else if (stOpt === 'Accepted+Published') subs = subs.filter(s => ['Published', 'Accepted'].includes(s.status));
+
+    let pens = D.Penelitian || [];
+    if (sem) pens = pens.filter(p => (p.semester_bkd || '').toLowerCase() === sem.toLowerCase());
+
+    let totKum = 0, totSksPub = 0;
+    subs.forEach(s => {
+      const k = hitungKumBkd(s, J[s.id_jurnal]);
+      totKum += k.kumDidapat;
+      totSksPub += k.sks;
+    });
+
+    let totSksPen = 0;
+    if (incPen) {
+      pens.forEach(p => {
+        const sks = p.sks_bkd ? parseFloat(p.sks_bkd) : (p.status === 'Selesai' ? 3 : 2);
+        if (!isNaN(sks)) totSksPen += sks;
+      });
+    }
+
+    const grandTotalSks = totSksPub + totSksPen;
+    const box = $('#bkd-preview-stats');
+    if (box) {
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-weight:700;color:#1E40AF">Estimasi Capaian Periode ${sem ? esc(sem) : 'Semua Semester'}:</span>
+          <span class="bd gr">${subs.length} Naskah · ${incPen ? pens.length : 0} Riset</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <div style="background:#fff;padding:8px 12px;border-radius:6px;border:1px solid #DBEAFE">
+            <div class="mu" style="font-size:11px">TOTAL ESTIMASI KUM</div>
+            <b style="font-size:17px;color:#1E3A8A">${totKum.toFixed(2)} <span style="font-size:12px;font-weight:normal">KUM</span></b>
+          </div>
+          <div style="background:#fff;padding:8px 12px;border-radius:6px;border:1px solid #DBEAFE">
+            <div class="mu" style="font-size:11px">TOTAL SKS BKD PENELITIAN</div>
+            <b style="font-size:17px;color:#047857">${grandTotalSks.toFixed(2)} <span style="font-size:12px;font-weight:normal">SKS</span></b>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:12px;line-height:1.4;color:${grandTotalSks >= 2 ? '#065F46' : '#92400E'}">
+          ${grandTotalSks >= 2 ? '✅ <b>Memenuhi Rubrik BKD:</b> Beban kerja penelitian memenuhi batas minimal (standar: 2 s.d 4 SKS per semester).' : '⚠️ <b>Perhatian:</b> Total SKS penelitian di bawah 2 SKS. Pastikan naskah/laporan riset pada semester ini sudah dicatat.'}
+        </div>
+      `;
+    }
+  }
+
+  function openBkdModal() {
+    const D = S.D; if (!D) return;
+    const c = cfg();
+    const subs = D.Submission || [], pens = D.Penelitian || [];
+    const allSemesters = [...new Set([
+      ...subs.map(s => s.semester_bkd),
+      ...pens.map(p => p.semester_bkd),
+      '2025/2026 Genap', '2025/2026 Ganjil', '2024/2025 Genap', '2024/2025 Ganjil'
+    ].filter(Boolean))].sort().reverse();
+
+    openModal(`
+      <div class="ov">
+        <div class="mod" style="max-width:580px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <h2 style="font-size:18px;color:#1E3A8A">Laporan BKD &amp; Rekapitulasi KUM</h2>
+              <p class="mu" style="font-size:12.5px;margin:2px 0 0">Cetak dokumen resmi pelaporan Beban Kerja Dosen untuk disetorkan ke institusi &amp; Asesor BKD.</p>
+            </div>
+            <button type="button" class="btn sm" data-a="mclose" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
+
+          <div style="background:#F8FAFC;border:1px solid #E2E8F0;padding:12px 14px;border-radius:8px;margin:14px 0;font-size:12.5px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+              <div><b>Nama Dosen:</b> ${esc(c.nama || 'Belum diisi')}</div>
+              <span class="bd bl">${esc(c.jabatan_fungsional || 'Lektor')}</span>
+            </div>
+            <div class="mu" style="margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px">
+              <span>NIDN: <b>${esc(c.nidn || '—')}</b></span>
+              <span>NIP: <b>${esc(c.nip || '—')}</b></span>
+              <span>Prodi: <b>${esc(c.prodi || '—')}</b></span>
+              <span>Unit: <b>${esc(c.fakultas || c.afiliasi || '—')}</b></span>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr;gap:10px">
+            <div>
+              <label for="bkd_sem" style="font-weight:700">Periode Semester BKD</label>
+              <select id="bkd_sem" class="in" style="font-weight:600">
+                <option value="">— Semua Periode Semester —</option>
+                ${allSemesters.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label for="bkd_status" style="font-weight:700">Filter Status Publikasi</label>
+              <select id="bkd_status" class="in">
+                <option value="Published">Hanya Artikel Terbit Resmi (Published)</option>
+                <option value="Accepted+Published">Artikel Terbit &amp; Diterima (Published / LoA Accepted)</option>
+                <option value="All">Semua Naskah (Termasuk Draft / Under Review)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:600;display:flex;align-items:center;gap:8px;margin-top:4px;cursor:pointer">
+                <input type="checkbox" id="bkd_inc_pen" checked> Sertakan Laporan Kegiatan Penelitian Berjalan / Selesai
+              </label>
+            </div>
+          </div>
+
+          <div id="bkd-preview-stats" style="margin-top:14px;padding:12px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px"></div>
+
+          <div class="act" style="margin-top:20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+            <button type="button" class="btn" data-a="mclose">Tutup</button>
+            <button type="button" class="btn" data-a="doBkdCsv" style="background:#059669;color:#fff;border-color:#059669;font-weight:600">
+              📊 Unduh Excel / CSV
+            </button>
+            <button type="button" class="btn pri" data-a="doBkdPrint" style="font-weight:600">
+              🖨️ Cetak / PDF Resmi
+            </button>
+          </div>
+        </div>
+      </div>
+    `);
+
+    setTimeout(updateBkdModalPreview, 50);
+  }
+
+  function printBkdReport(sem, stOpt, incPen) {
+    const D = S.D; if (!D) return;
+    const c = cfg();
+    const J = Object.fromEntries((D.Jurnal || []).map(j => [j.id, j]));
+
+    let subs = D.Submission || [];
+    if (sem) subs = subs.filter(s => (s.semester_bkd || '').toLowerCase() === sem.toLowerCase());
+    if (stOpt === 'Published') subs = subs.filter(s => s.status === 'Published');
+    else if (stOpt === 'Accepted+Published') subs = subs.filter(s => ['Published', 'Accepted'].includes(s.status));
+
+    let pens = D.Penelitian || [];
+    if (sem) pens = pens.filter(p => (p.semester_bkd || '').toLowerCase() === sem.toLowerCase());
+
     const win = window.open('', '_blank');
     if (!win) return toast('Pop-up cetak terblokir di browser Anda', true);
-    const pens = D.Penelitian || [], subs = D.Submission || [], J = Object.fromEntries((D.Jurnal || []).map(j => [j.id, j]));
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Rekapitulasi BKD - ${esc(c.nama || 'Dosen')}</title>
-    <style>
-      body{font-family:'Plus Jakarta Sans',Arial,sans-serif;color:#0F172A;padding:36px;line-height:1.6;max-width:960px;margin:auto}
-      h1{font-size:20px;margin:0 0 4px;text-align:center;text-transform:uppercase;color:#1E3A8A}
-      h2{font-size:13.5px;margin:0 0 20px;text-align:center;color:#64748B;font-weight:normal}
-      .meta{border:1px solid #E2E8F0;background:#F8FAFC;padding:16px;border-radius:8px;margin-bottom:24px;font-size:13px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-      table{width:100%;border-collapse:collapse;margin-bottom:24px;font-size:12px}
-      th,td{border:1px solid #CBD5E1;padding:9px 12px;text-align:left;vertical-align:top}
-      th{background:#F1F5F9;font-weight:bold;color:#1E293B}
-      .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;background:#E2E8F0}
-      .sec-title{font-size:14.5px;font-weight:bold;margin:20px 0 10px;border-bottom:2px solid #1E3A8A;padding-bottom:5px;color:#1E3A8A}
-      @media print{button{display:none}body{padding:0}}
-    </style></head><body>
-    <div style="text-align:right;margin-bottom:16px"><button onclick="window.print()" style="padding:9px 18px;cursor:pointer;background:#1E3A8A;color:#fff;border:none;border-radius:6px;font-weight:bold;font-size:13px">🖨️ Cetak / Simpan PDF</button></div>
-    <h1>Rekapitulasi Penelitian &amp; Publikasi Ilmiah</h1>
-    <h2>Laporan Kinerja Dosen / BKD · Dicetak pada ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
-    <div class="meta">
-      <div><b>Nama Dosen:</b> ${esc(c.nama || '—')}</div>
-      <div><b>Afiliasi:</b> ${esc(c.afiliasi || '—')}</div>
-      <div><b>Total Penelitian:</b> ${pens.length} Judul</div>
-      <div><b>Total Publikasi/Artikel:</b> ${subs.length} Naskah</div>
+
+    let totKum = 0, totSksPub = 0;
+    const pubRows = subs.map((s, i) => {
+      const j = J[s.id_jurnal] || {};
+      const k = hitungKumBkd(s, j);
+      totKum += k.kumDidapat;
+      totSksPub += k.sks;
+      const bukti = s.link_final || (s.doi ? 'https://doi.org/' + s.doi : '');
+      return `
+        <tr>
+          <td style="text-align:center">${i + 1}</td>
+          <td><b>${esc(s.judul)}</b></td>
+          <td>${esc(j.nama || '—')}<br><small style="color:#2563EB;font-weight:600">${esc(k.labelKat)}</small></td>
+          <td style="text-align:center">${esc(s.peran_penulis || 'Penulis Pertama')}</td>
+          <td style="text-align:center">${esc(s.total_penulis || 1)}</td>
+          <td style="text-align:center">${k.kumMaks}</td>
+          <td style="text-align:center">${esc(k.porsiTxt)}</td>
+          <td style="text-align:center;font-weight:bold;color:#1E3A8A">${k.kumDidapat.toFixed(2)}</td>
+          <td style="text-align:center;font-weight:bold;color:#047857">${k.sks.toFixed(2)}</td>
+          <td style="word-break:break-all;font-size:11px">
+            ${bukti ? `<a href="${esc(bukti)}" target="_blank" rel="noopener" style="color:#1D4ED8;text-decoration:none">${esc(s.doi || 'Lihat Artikel Terbit')}</a>` : '<span style="color:#94A3B8">—</span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    let totSksPen = 0;
+    const penRows = (incPen ? pens : []).map((p, i) => {
+      const sks = p.sks_bkd ? parseFloat(p.sks_bkd) : (p.status === 'Selesai' ? 3 : 2);
+      if (!isNaN(sks)) totSksPen += sks;
+      const bukti = p.link_pdf || p.link_berkas || '';
+      return `
+        <tr>
+          <td style="text-align:center">${i + 1}</td>
+          <td><b>${esc(p.judul)}</b></td>
+          <td>${esc(p.bidang || '—')}</td>
+          <td>${esc(p.kolaborator || 'Mandiri')}</td>
+          <td style="text-align:center">${fmt(p.tanggal_mulai)}</td>
+          <td style="text-align:center"><span style="padding:2px 8px;border-radius:4px;background:#F1F5F9;font-weight:bold;font-size:11px">${esc(p.status)}</span></td>
+          <td style="text-align:center;font-weight:bold;color:#047857">${sks.toFixed(2)}</td>
+          <td style="word-break:break-all;font-size:11px">
+            ${bukti ? `<a href="${esc(bukti)}" target="_blank" rel="noopener" style="color:#1D4ED8;text-decoration:none">Tautan Bukti Berkas</a>` : '<span style="color:#94A3B8">—</span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const grandTotalSks = totSksPub + (incPen ? totSksPen : 0);
+    const todayStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Laporan BKD — ${esc(c.nama || 'Dosen')} (${esc(sem || 'Semua Periode')})</title>
+  <style>
+    @page { size: A4 portrait; margin: 15mm 15mm 20mm 15mm; }
+    body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; color: #0F172A; margin: 0; padding: 24px; font-size: 12px; line-height: 1.5; background: #fff; }
+    .kop { text-align: center; border-bottom: 3px double #1E3A8A; padding-bottom: 12px; margin-bottom: 18px; }
+    .kop h1 { font-size: 15px; margin: 0; text-transform: uppercase; color: #1E3A8A; letter-spacing: 0.5px; }
+    .kop h2 { font-size: 13px; margin: 4px 0 0; font-weight: 600; color: #334155; }
+    .kop p { font-size: 11px; margin: 2px 0 0; color: #64748B; }
+    
+    .meta-box { border: 1px solid #CBD5E1; background: #F8FAFC; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+    .meta-box div { line-height: 1.4; }
+    
+    .sec-head { font-size: 13px; font-weight: bold; color: #1E3A8A; border-bottom: 1.5px solid #1E3A8A; padding-bottom: 4px; margin: 18px 0 8px; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 11px; page-break-inside: auto; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    th, td { border: 1px solid #94A3B8; padding: 6px 8px; text-align: left; vertical-align: middle; }
+    th { background: #F1F5F9; font-weight: bold; color: #1E293B; text-align: center; font-size: 10.5px; }
+    .tfoot-total td { background: #F8FAFC; font-weight: bold; }
+    
+    .rekap-card { background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px 14px; margin: 16px 0; display: flex; justify-content: space-around; font-size: 12px; }
+    .rekap-card div { text-align: center; }
+    .rekap-card b { display: block; font-size: 16px; color: #1E3A8A; margin-top: 2px; }
+    
+    .sign-wrap { margin-top: 32px; page-break-inside: avoid; }
+    .sign-date { text-align: right; margin-bottom: 14px; font-size: 12px; }
+    .sign-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center; font-size: 11.5px; }
+    .sign-box { display: flex; flex-direction: column; justify-content: space-between; height: 110px; }
+    .sign-name { font-weight: bold; text-decoration: underline; }
+    .sign-pimpinan { margin-top: 24px; text-align: center; font-size: 11.5px; }
+    
+    .no-print-bar { background: #1E3A8A; color: #fff; padding: 12px 18px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-print { background: #F59E0B; color: #000; border: none; padding: 8px 18px; font-weight: bold; font-size: 13px; border-radius: 4px; cursor: pointer; }
+    @media print { .no-print-bar { display: none !important; } body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="no-print-bar">
+    <span><b>Dokumen Siap Cetak / Simpan PDF:</b> Format resmi Laporan Kinerja Dosen (BKD) Bidang Riset &amp; Publikasi.</span>
+    <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+  </div>
+
+  <div class="kop">
+    <h1>${esc(c.afiliasi || 'PERGURUAN TINGGI')}</h1>
+    <h2>LAPORAN KINERJA DOSEN (BKD) — BIDANG PENELITIAN &amp; PUBLIKASI KARYA ILMIAH</h2>
+    <p>Periode Evaluasi: <b>${esc(sem ? sem.toUpperCase() : 'SEMUA PERIODE SEMESTER')}</b> · Rubrik Standar PO PAK &amp; BKD Dikti</p>
+  </div>
+
+  <div class="meta-box">
+    <div><b>Nama Dosen:</b> ${esc(c.nama || '—')}</div>
+    <div><b>Jabatan Fungsional:</b> ${esc(c.jabatan_fungsional || 'Lektor')}</div>
+    <div><b>NIDN / NIDK:</b> ${esc(c.nidn || '—')}</div>
+    <div><b>Program Studi:</b> ${esc(c.prodi || '—')}</div>
+    <div><b>NIP / NPK:</b> ${esc(c.nip || '—')}</div>
+    <div><b>Fakultas / Unit:</b> ${esc(c.fakultas || c.afiliasi || '—')}</div>
+  </div>
+
+  <div class="sec-head">A. Pelaksanaan Publikasi Karya Ilmiah (Jurnal &amp; Prosiding)</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:25px">No</th>
+        <th>Judul Karya Ilmiah</th>
+        <th>Jurnal Sasaran &amp; Kategori</th>
+        <th style="width:90px">Peran Penulis</th>
+        <th style="width:40px">Jml Pen</th>
+        <th style="width:40px">KUM Maks</th>
+        <th style="width:50px">Porsi (%)</th>
+        <th style="width:50px">KUM Perolehan</th>
+        <th style="width:45px">SKS BKD</th>
+        <th>Bukti Fisik / Tautan Terbit</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${pubRows || '<tr><td colspan="10" style="text-align:center;padding:16px;color:#64748B">Tidak ada data publikasi untuk periode ini</td></tr>'}
+    </tbody>
+    <tfoot>
+      <tr class="tfoot-total">
+        <td colspan="7" style="text-align:right">SUBTOTAL PUBLIKASI KARYA ILMIAH:</td>
+        <td style="text-align:center;color:#1E3A8A">${totKum.toFixed(2)}</td>
+        <td style="text-align:center;color:#047857">${totSksPub.toFixed(2)}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  ${incPen ? `
+    <div class="sec-head">B. Kegiatan Penelitian Mandiri / Didanai (Laporan Riset)</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25px">No</th>
+          <th>Judul Penelitian</th>
+          <th>Bidang Ilmu</th>
+          <th>Kolaborator / Tim</th>
+          <th style="width:75px">Mulai</th>
+          <th style="width:70px">Status</th>
+          <th style="width:55px">SKS BKD</th>
+          <th>Bukti Dokumen / Berkas</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${penRows || '<tr><td colspan="8" style="text-align:center;padding:14px;color:#64748B">Tidak ada data penelitian untuk periode ini</td></tr>'}
+      </tbody>
+      <tfoot>
+        <tr class="tfoot-total">
+          <td colspan="6" style="text-align:right">SUBTOTAL KEGIATAN PENELITIAN:</td>
+          <td style="text-align:center;color:#047857">${totSksPen.toFixed(2)}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  ` : ''}
+
+  <div class="rekap-card">
+    <div>
+      <span>TOTAL ANGKA KREDIT (KUM)</span>
+      <b>${totKum.toFixed(2)} KUM</b>
     </div>
-    <div class="sec-title">A. Data Riset &amp; Penelitian</div>
-    <table>
-      <thead><tr><th style="width:30px">No</th><th>Judul Penelitian</th><th>Bidang Ilmu</th><th>Kolaborator</th><th>Mulai</th><th>Status</th></tr></thead>
-      <tbody>${pens.map((p, i) => `<tr><td style="text-align:center">${i + 1}</td><td><b>${esc(p.judul)}</b></td><td>${esc(p.bidang || '—')}</td><td>${esc(p.kolaborator || 'Mandiri')}</td><td>${fmt(p.tanggal_mulai)}</td><td>${esc(p.status)}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada data penelitian</td></tr>'}</tbody>
-    </table>
-    <div class="sec-title">B. Data Submission &amp; Publikasi Artikel Ilmiah</div>
-    <table>
-      <thead><tr><th style="width:30px">No</th><th>Judul Artikel</th><th>Jurnal Sasaran / Akreditasi</th><th>Status</th><th>Tahun</th><th>DOI / Tautan</th></tr></thead>
-      <tbody>${subs.map((s, i) => { const j = J[s.id_jurnal] || {}; return `<tr><td style="text-align:center">${i + 1}</td><td><b>${esc(s.judul)}</b></td><td>${esc(j.nama || '—')}<br><small>${esc(akr(j))}</small></td><td><span class="badge">${esc(s.status)}</span></td><td>${esc(s.tahun_terbit || '—')}</td><td style="word-break:break-all">${esc(s.doi || s.link_final || '—')}</td></tr>`; }).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada data publikasi</td></tr>'}</tbody>
-    </table>
-    </body></html>`;
+    <div>
+      <span>TOTAL BEBAN KERJA SKS</span>
+      <b style="color:#047857">${grandTotalSks.toFixed(2)} SKS</b>
+    </div>
+    <div>
+      <span>KESIMPULAN EVALUASI BKD</span>
+      <b style="color:${grandTotalSks >= 2 ? '#047857' : '#D97706'};font-size:13px">${grandTotalSks >= 2 ? 'MEMENUHI SYARAT MINIMAL' : 'PERLU TAMBAHAN BEBAN'}</b>
+    </div>
+  </div>
+
+  <div class="sign-wrap">
+    <div class="sign-date">Dicetak pada: ${todayStr}</div>
+    <div class="sign-grid">
+      <div class="sign-box">
+        <div>Asesor I BKD,</div>
+        <div style="height:50px"></div>
+        <div>
+          <div class="sign-name">${esc(c.nama_asesor_1 || '...................................................')}</div>
+          <div>NIP/NIDN: .......................................</div>
+        </div>
+      </div>
+      <div class="sign-box">
+        <div>Asesor II BKD,</div>
+        <div style="height:50px"></div>
+        <div>
+          <div class="sign-name">${esc(c.nama_asesor_2 || '...................................................')}</div>
+          <div>NIP/NIDN: .......................................</div>
+        </div>
+      </div>
+      <div class="sign-box">
+        <div>Dosen yang Dinilai,</div>
+        <div style="height:50px"></div>
+        <div>
+          <div class="sign-name">${esc(c.nama || '...................................................')}</div>
+          <div>NIDN: ${esc(c.nidn || '.......................................')}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sign-pimpinan">
+      <div>Mengetahui,</div>
+      <div>Dekan / Ketua Program Studi</div>
+      <div style="height:50px"></div>
+      <div class="sign-name">${esc(c.nama_pimpinan || '...........................................................................')}</div>
+      <div>NIP: ..............................................................</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
     win.document.write(html);
     win.document.close();
+  }
+
+  function exportBkdCsv(sem, stOpt, incPen) {
+    const D = S.D; if (!D) return;
+    const J = Object.fromEntries((D.Jurnal || []).map(j => [j.id, j]));
+
+    let subs = D.Submission || [];
+    if (sem) subs = subs.filter(s => (s.semester_bkd || '').toLowerCase() === sem.toLowerCase());
+    if (stOpt === 'Published') subs = subs.filter(s => s.status === 'Published');
+    else if (stOpt === 'Accepted+Published') subs = subs.filter(s => ['Published', 'Accepted'].includes(s.status));
+
+    let pens = D.Penelitian || [];
+    if (sem) pens = pens.filter(p => (p.semester_bkd || '').toLowerCase() === sem.toLowerCase());
+
+    const headers = [
+      'No', 'Semester BKD', 'Kategori', 'Judul Karya / Penelitian', 'Jurnal / Media',
+      'Akreditasi', 'Peran Penulis', 'Total Penulis', 'KUM Maksimal', 'Porsi (%)',
+      'KUM Diperoleh', 'SKS BKD', 'Status', 'Tahun', 'Tautan Bukti / DOI'
+    ];
+
+    const rows = [];
+    subs.forEach((s, idx) => {
+      const j = J[s.id_jurnal] || {};
+      const k = hitungKumBkd(s, j);
+      rows.push([
+        idx + 1,
+        s.semester_bkd || sem || '—',
+        'Publikasi Ilmiah',
+        s.judul || '',
+        j.nama || '',
+        k.labelKat,
+        s.peran_penulis || 'Penulis Pertama',
+        s.total_penulis || 1,
+        k.kumMaks,
+        k.porsiTxt,
+        k.kumDidapat.toFixed(2),
+        k.sks.toFixed(2),
+        s.status || '',
+        s.tahun_terbit || '',
+        s.doi ? 'https://doi.org/' + s.doi : (s.link_final || '')
+      ]);
+    });
+
+    if (incPen) {
+      pens.forEach((p, idx) => {
+        const sks = p.sks_bkd ? parseFloat(p.sks_bkd) : (p.status === 'Selesai' ? 3 : 2);
+        rows.push([
+          subs.length + idx + 1,
+          p.semester_bkd || sem || '—',
+          'Penelitian / Riset',
+          p.judul || '',
+          p.bidang || '',
+          'Laporan Penelitian',
+          p.kolaborator || 'Mandiri',
+          1,
+          '—',
+          '—',
+          '—',
+          sks.toFixed(2),
+          p.status || '',
+          (p.tanggal_mulai || '').slice(0, 4),
+          p.link_pdf || p.link_berkas || ''
+        ]);
+      });
+    }
+
+    if (!rows.length) return toast('Tidak ada data BKD yang sesuai filter untuk diekspor', true);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(c => '"' + String(c ?? '').replace(/"/g, '""') + '"').join(','))].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8' }));
+    a.download = `BKD-SIMPEN-${(sem || 'SEMUA').replace(/[\s\/]+/g, '_')}-${today()}.csv`;
+    a.click();
+    toast('File rekap BKD CSV berhasil diunduh');
+  }
+
+  function openMobileMenuModal() {
+    const D = S.D;
+    const nCfp = (D?.CFP || []).filter(cfpNear).length;
+    openModal(`
+      <div class="ov" style="align-items:flex-end">
+        <div class="mod mobile-sheet" style="border-bottom-left-radius:0;border-bottom-right-radius:0;max-width:100%;width:100%;margin:0;padding:20px 18px 28px;animation:slideUp 0.25s ease-out">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--bd)">
+            <b style="font-size:16px;color:#0F172A">Menu Lainnya &amp; Fitur Dosen</b>
+            <button type="button" class="btn sm" data-a="mclose" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button type="button" class="btn" data-a="pdfBkd" style="justify-content:flex-start;padding:12px 14px;font-size:14px;background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE">
+              ${SVG.print} <span style="font-weight:700">Laporan BKD &amp; Rekapitulasi KUM</span>
+            </button>
+            <button type="button" class="btn ${S.page === 'cfp' ? 'pri' : ''}" data-a="navCloseModal" data-id="cfp" style="justify-content:space-between;padding:12px 14px;font-size:14px">
+              <span style="display:flex;align-items:center;gap:10px">${SVG.cfp} <span>CFP &amp; Target Deadline</span></span>
+              ${nCfp ? `<span class="cnt">${nCfp}</span>` : ''}
+            </button>
+            <button type="button" class="btn ${S.page === 'set' ? 'pri' : ''}" data-a="navCloseModal" data-id="set" style="justify-content:flex-start;padding:12px 14px;font-size:14px">
+              <span style="display:flex;align-items:center;gap:10px">${SVG.set} <span>Pengaturan &amp; Profil Dosen</span></span>
+            </button>
+            <button type="button" class="btn" data-a="goPubCloseModal" style="justify-content:flex-start;padding:12px 14px;font-size:14px;color:var(--pri-tx)">
+              <span style="display:flex;align-items:center;gap:10px">${SVG.ext} <span>Kunjungi Halaman Publik</span></span>
+            </button>
+            <div style="border-top:1px solid var(--bd);margin:8px 0 0;padding-top:8px">
+              <button type="button" class="btn dng" data-a="logout" style="width:100%;justify-content:flex-start;padding:12px 14px;font-size:14px">
+                <span style="display:flex;align-items:center;gap:10px">${SVG.logout} <span>Keluar dari Panel Admin</span></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `);
   }
 
   // ============ RENDER & EVENTS ============
@@ -1374,7 +2018,31 @@
     else if (a === 'cek') { const s = S.D.Submission.find(x => x.id === id); upsert('Submission', { ...s, tgl_cek: today() }); toast('Ditandai sudah dicek'); }
     else if (a === 'cfp2sub') { const c = S.D.CFP.find(x => x.id === id); S.page = 'sub'; sessionStorage.setItem('sp_admin_page', 'sub'); openForm('Submission', { status: 'Draft', id_jurnal: c.id_jurnal, tgl_cek: today() }); }
     else if (a === 'csv') csv(ent);
-    else if (a === 'pdfBkd') exportBKD();
+    else if (a === 'pdfBkd') openBkdModal();
+    else if (a === 'doBkdPrint') {
+      const sem = $('#bkd_sem')?.value || '';
+      const st = $('#bkd_status')?.value || 'Published';
+      const inc = $('#bkd_inc_pen')?.checked ?? true;
+      printBkdReport(sem, st, inc);
+    }
+    else if (a === 'doBkdCsv') {
+      const sem = $('#bkd_sem')?.value || '';
+      const st = $('#bkd_status')?.value || 'Published';
+      const inc = $('#bkd_inc_pen')?.checked ?? true;
+      exportBkdCsv(sem, st, inc);
+    }
+    else if (a === 'mobileMenu') openMobileMenuModal();
+    else if (a === 'navCloseModal') {
+      closeModal();
+      S.page = id;
+      sessionStorage.setItem('sp_admin_page', id);
+      draw();
+    }
+    else if (a === 'goPubCloseModal') {
+      closeModal();
+      S.view = 'pub';
+      draw();
+    }
     else if (a === 'hist') {
       const h = (S.D.StatusLog || []).filter(x => x.id_submission === id);
       openModal(`
@@ -1451,8 +2119,14 @@
     else if (t.id === 'oc') { S.onlyCheck = t.checked; draw(); }
     else if (t.id === 'pub_perpage') { S.pubJurPerPage = Number(t.value) || 12; S.pubJurPage = 1; draw(); }
     else if (t.id === 'admin_perpage') { S.adminJurPerPage = Number(t.value) || 10; S.adminJurPage = 1; draw(); }
+    else if (t.id && ['bkd_sem', 'bkd_status', 'bkd_inc_pen'].includes(t.id)) {
+      updateBkdModalPreview();
+    }
     else if (t.name === 'nama' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Jurnal') {
       checkJournalDuplicateLive(t);
+    }
+    else if (t.form && t.form.id === 'mf' && t.form.dataset.e === 'Submission' && ['id_jurnal', 'peran_penulis', 'total_penulis'].includes(t.name)) {
+      updateSubmissionKumInForm();
     }
   });
 
@@ -1473,6 +2147,8 @@
       }, 200);
     } else if (t.name === 'nama' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Jurnal') {
       checkJournalDuplicateLive(t);
+    } else if (t.form && t.form.id === 'mf' && t.form.dataset.e === 'Submission' && ['id_jurnal', 'peran_penulis', 'total_penulis'].includes(t.name)) {
+      updateSubmissionKumInForm();
     }
   });
 
