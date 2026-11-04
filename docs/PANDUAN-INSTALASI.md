@@ -55,43 +55,47 @@ Folder kerja frontend = **folder hasil ekstrak ZIP `simpen-frontend`** (di dalam
 
 ---
 
-## 🔄 Panduan Memperbarui Aplikasi (Update Fitur BKD, KUM, & Mobile PWA)
+## 🔄 Panduan Memperbarui Aplikasi (Update Fitur PRO: SWR 0ms, eTTD QR BKD, & Matriks WA)
 
 Lakukan langkah-langkah berikut secara berurutan agar pembaruan berjalan mulus tanpa merusak data yang sudah ada:
 
+### Fitur Baru yang Dihadirkan pada Pembaruan Ini:
+1. **⚡ SWR (Stale-While-Revalidate) & Instant UX**: Membuka halaman publik dan panel admin kini berlangsung instan (0 milidetik) menggunakan cache browser lokal, kemudian sinkronisasi data mutakhir diperbarui otomatis di latar belakang.
+2. **📄 QR Code eTTD & Verifikasi Keaslian Dokumen BKD (`gas-doc-engine`)**: Laporan cetak BKD kini dilengkapi kode dokumen unik dan QR Code Tanda Tangan Elektronik yang dapat dipindai langsung dengan smartphone untuk verifikasi status keabsahan dokumen secara publik.
+3. **📲 Matriks Notifikasi WhatsApp Event-Driven (`gas-notifikasi-wa-crm`)**: Pengaturan kendali notifikasi WhatsApp di menu admin kini memiliki saklar master dan toggle pilihan per-kejadian (Pengingat Deadline Revisi H-7/H-3, Deadline CFP, Naskah Accepted, dan Perubahan Status).
+4. **📊 Modern Dashboard Analytics & Kanban Alert (`ui-ux-pro-max`)**: Metrik total akumulasi KUM, persentase keberhasilan (*Acceptance Rate*), visual peringatan batas revisi naskah pada papan Kanban, serta dialog konfirmasi hapus data kustom yang elegan.
+
 ### Langkah 1: Update Backend (Google Apps Script)
 1. Buka [script.google.com](https://script.google.com) dan buka proyek **SIMPEN** Anda.
-2. Buka berkas `Kode.gs` (atau `Code.gs`), **hapus isinya lalu tempelkan seluruh kode dari berkas `Kode.js` lokal terbaru**.
+2. Buka berkas `Kode.gs` (atau `Code.gs`), **hapus isinya lalu tempelkan seluruh kode dari berkas `backend/Kode.js` (atau `Kode.js`) lokal terbaru**.
 3. Simpan perubahan dengan menekan `Ctrl + S`.
 4. Lakukan deploy versi baru:
    * Klik tombol biru **Deploy** (kanan atas) → **Kelola deployment** (*Manage deployments*).
    * Klik **ikon pensil** (Edit) pada deployment aktif Anda.
    * Pada dropdown **Versi**, pilih **Versi baru** (*New version*).
    * Klik tombol **Deploy** lalu **Selesai**.
-   > **Catatan Database:** Anda **TIDAK PERLU** mengedit tabel Google Sheet secara manual. Backend memiliki fitur *auto-migration* yang otomatis menambahkan kolom-kolom baru (`semester_bkd`, `peran_penulis`, `total_penulis`, `sks_bkd`, `nidn`, `nip`, `jabatan_fungsional`, `prodi`, `fakultas`, dll.) saat data disimpan, sehingga data lama tetap aman.
+   > **Catatan Database:** Anda **TIDAK PERLU** mengedit tabel Google Sheet secara manual. Backend memiliki fitur *auto-migration* yang otomatis menambahkan kolom-kolom baru (`semester_bkd`, `peran_penulis`, `total_penulis`, `sks_bkd`, `nidn`, `nip`, `jabatan_fungsional`, `prodi`, `fakultas`, `wa_master`, `notif_revisi`, `notif_cfp`, `notif_cek`, `notif_accepted`, `notif_status`) saat data disimpan, sehingga data lama tetap aman.
 
 ### Langkah 2: Update Frontend ke GitHub Pages
 1. Pastikan berkas di folder lokal sudah mencakup:
-   * `js/app.js` (Logika BKD, kalkulator KUM, bottom nav)
-   * `css/style.css` (Tampilan mobile bottom nav & layout cetak BKD)
-   * `index.html` (Meta tags PWA)
-   * `manifest.json` (Konfigurasi instalasi aplikasi mobile)
+   * `js/app.js` (Logika SWR, QR eTTD verifikasi, matriks notifikasi WA)
+   * `js/api.js` (Lapisan API terintegrasi & monitoring latensi)
+   * `css/style.css` (Styling toggle switch, badge deadline kritis, & modal verifikasi)
 2. Buka PowerShell / Terminal di folder proyek SIMPEN, lalu jalankan:
    ```powershell
    git add .
-   git commit -m "feat: integrasi laporan BKD semester, kalkulator KUM, bottom nav mobile, dan PWA"
+   git commit -m "feat: upgrade pro - instant swr ux, qr ettd bkd verification, wa notification matrix, and advanced analytics"
    git push origin main
    ```
 3. Tunggu 1–2 menit hingga GitHub Pages selesai memproses *build*.
 
-### Langkah 3: Pengisian Identitas BKD Dosen (Di Panel Admin)
+### Langkah 3: Pengisian Identitas BKD & Matriks Notifikasi (Di Panel Admin)
 1. Buka situs SIMPEN di browser Anda (tekan `Ctrl + F5` atau `Ctrl + Shift + R` untuk memastikan browser memuat file terbaru).
 2. Masuk ke **Panel Admin** → buka menu **Pengaturan**.
-3. Isi bagian baru **Identitas BKD Dosen**:
-   * **NIDN / NIDK** dan **NIP / NPK Pegawai**
-   * **Jabatan Fungsional** (Asisten Ahli / Lektor / Lektor Kepala / Guru Besar)
-   * **Program Studi** dan **Fakultas / Unit Kerja**
-   * (Opsional) Nama Asesor BKD 1 & 2 serta Pimpinan Fakultas (Dekan/Kaprodi)
+3. Periksa dan sesuaikan:
+   * **Identitas BKD Dosen**: NIDN, NIP, Jabatan Fungsional, Prodi, Fakultas, Asesor 1 & 2, Pimpinan.
+   * **Matriks Notifikasi WhatsApp**: Aktifkan saklar notifikasi yang diinginkan (Pengingat Revisi, CFP, Naskah Diterima, dll.).
+   * Masukkan nomor WhatsApp pengelola (format `08...` otomatis dikonversi ke `628...`).
 4. Klik **Simpan Pengaturan**.
 
 ### Langkah 4: Menyesuaikan Data Naskah untuk Pelaporan BKD

@@ -1394,3 +1394,167 @@ tr:hover td {
     font-size: 12px;
   }
 }
+
+/* ============================================================
+   UI/UX PRO MAX & GAS INSTANT UX ENHANCEMENTS
+   ============================================================ */
+
+/* Skeleton Loader Animation */
+@keyframes pulseSkeleton {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
+}
+.skeleton-box {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: pulseSkeleton 1.6s ease-in-out infinite;
+  border-radius: var(--r-sm);
+}
+
+/* Switch Toggle UI (Matriks Notifikasi WA) */
+.toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-md);
+  margin-bottom: 8px;
+  transition: var(--trans);
+}
+.toggle-item:hover {
+  background: var(--surface-hover);
+  border-color: var(--bd-hover);
+}
+.toggle-item-title {
+  font-weight: 600;
+  color: var(--tx);
+  font-size: 13.5px;
+  display: block;
+}
+.toggle-item-desc {
+  font-size: 12px;
+  color: var(--mu);
+  margin-top: 2px;
+  display: block;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #CBD5E1;
+  transition: .25s ease;
+  border-radius: 24px;
+}
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .25s ease;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #2563EB;
+}
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Critical Deadline Pulse Alert */
+@keyframes critPulse {
+  0%, 100% { border-color: #EF4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { border-color: #DC2626; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
+}
+.deadline-crit {
+  animation: critPulse 2s infinite ease-in-out;
+  border: 1.5px solid #EF4444 !important;
+  background: #FEF2F2 !important;
+  color: #991B1B !important;
+}
+
+/* Scopus & Sinta Rich Badges */
+.bd.scopus {
+  background: #F3E8FF;
+  color: #6B21A8;
+  border: 1px solid #D8B4FE;
+  font-weight: 700;
+}
+.bd.sinta1 {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #6EE7B7;
+  font-weight: 700;
+}
+
+/* Document Verification Modal & Badge */
+.verify-badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1.5px solid #10B981;
+  padding: 8px 16px;
+  border-radius: var(--r-full);
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.verify-stamp-box {
+  border: 2px dashed #3B82F6;
+  background: #EFF6FF;
+  border-radius: var(--r-lg);
+  padding: 18px;
+  text-align: center;
+  margin: 16px 0;
+}
+.verify-code-pill {
+  display: inline-block;
+  background: #1E3A8A;
+  color: #FFFFFF;
+  padding: 4px 12px;
+  border-radius: var(--r-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.5px;
+  margin-top: 6px;
+}
+
+/* Custom Confirmation Modal */
+.confirm-box {
+  max-width: 420px;
+  width: 90%;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: 24px;
+  box-shadow: var(--sh-xl);
+  text-align: center;
+  border: 1px solid var(--bd);
+}
+.confirm-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+

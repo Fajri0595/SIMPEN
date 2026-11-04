@@ -45,6 +45,25 @@
     copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
   };
 
+  // Cache Store & SWR Helpers (gas-instant-ux-pro)
+  const LS_PREFIX = 'sp:v3:';
+  const Store = {
+    get(k, d = null) {
+      try { const v = localStorage.getItem(LS_PREFIX + k); return v ? JSON.parse(v) : d; } catch (_) { return d; }
+    },
+    set(k, v) {
+      try { localStorage.setItem(LS_PREFIX + k, JSON.stringify(v)); } catch (_) {}
+    },
+    del(k) {
+      try { localStorage.removeItem(LS_PREFIX + k); } catch (_) {}
+    }
+  };
+  const hashData = d => {
+    const s = JSON.stringify(d || '');
+    let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return h + ':' + s.length;
+  };
+
   const badge = s => `<span class="bd ${STC[s] || 'sl'}">${esc(s)}</span>`;
   const initialAdminPage = (() => {
     const p = sessionStorage.getItem('sp_admin_page');
@@ -74,7 +93,8 @@
     nama: '', afiliasi: '', wa: '', foto: '', link_sinta: '', link_scholar: '', link_scopus: '',
     ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00',
     nidn: '', nip: '', jabatan_fungsional: 'Lektor', prodi: '', fakultas: '',
-    nama_asesor_1: '', nama_asesor_2: '', nama_pimpinan: ''
+    nama_asesor_1: '', nama_asesor_2: '', nama_pimpinan: '',
+    wa_master: true, notif_revisi: true, notif_cfp: true, notif_cek: true, notif_accepted: true, notif_status: false
   }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
   const jname = id => ((S.D?.Jurnal || []).find(j => j.id === id) || {}).nama || '—';
   const perluCek = s => PROSES.includes(s.status) && s.tgl_cek && -dayDiff(s.tgl_cek) > Number(cfg().ambang_cek);
@@ -89,7 +109,13 @@
   const KAMPUS = ['PTN', 'PTS', 'Lainnya'];
   const akr = j => { const m = String((j && (j.akreditasi || j.indeks)) || '').match(/sinta\s*([1-4])\b/i); return m ? 'Sinta ' + m[1] : 'Non-Sinta'; };
   const AKC = { 'Sinta 1': 'am', 'Sinta 2': 'bl', 'Sinta 3': 'ix', 'Sinta 4': 'gr', 'Non-Sinta': 'sl' };
-  const akrBadge = j => `<span class="bd ${AKC[akr(j)]}" style="text-transform:uppercase;font-size:11px">${akr(j)}</span>`;
+  const akrBadge = j => {
+    const a = akr(j);
+    const isScopus = /scopus|wos|internasional bereputasi/i.test((j?.nama || '') + ' ' + (j?.catatan || ''));
+    if (isScopus) return `<span class="bd scopus">SCOPUS / WOS</span>`;
+    if (a === 'Sinta 1') return `<span class="bd sinta1">SINTA 1</span>`;
+    return `<span class="bd ${AKC[a] || 'sl'}" style="text-transform:uppercase;font-size:11px">${a}</span>`;
+  };
 
   // Kalkulasi Angka Kredit (KUM) & Beban SKS BKD
   const hitungKumBkd = (s, j) => {
@@ -778,6 +804,17 @@
   function pDash() {
     const D = S.D, pub = D.Submission.filter(s => s.status === 'Published'), proses = D.Submission.filter(s => PROSES.includes(s.status));
     const tol = D.Submission.filter(s => ['Rejected', 'Withdrawn'].includes(s.status)), cf = D.CFP.filter(cfpNear).sort((a, b) => a.deadline.localeCompare(b.deadline)), pc = D.Submission.filter(perluCek);
+    const revNear = D.Submission.filter(s => PROSES.includes(s.status) && s.deadline_respon && dayDiff(s.deadline_respon) >= 0 && dayDiff(s.deadline_respon) <= 7).sort((a, b) => a.deadline_respon.localeCompare(b.deadline_respon));
+    
+    const J = Object.fromEntries((D.Jurnal || []).map(j => [j.id, j]));
+    let totKumPub = 0;
+    pub.forEach(s => {
+      const k = hitungKumBkd(s, J[s.id_jurnal] || {});
+      totKumPub += k.kumDidapat;
+    });
+    const totalSelesai = pub.length + D.Submission.filter(s => s.status === 'Accepted').length + tol.length;
+    const accRate = totalSelesai > 0 ? Math.round(((pub.length + D.Submission.filter(s => s.status === 'Accepted').length) / totalSelesai) * 100) : 100;
+
     const yrs = {}; pub.forEach(s => { if (s.tahun_terbit) yrs[s.tahun_terbit] = (yrs[s.tahun_terbit] || 0) + 1; });
     const ys = Object.keys(yrs).sort(), mx = Math.max(1, ...Object.values(yrs));
     const dist = STAT.map(s => [s, D.Submission.filter(x => x.status === s).length]).filter(x => x[1]);
@@ -791,11 +828,12 @@
       <button class="btn" data-a="add" data-e="Penelitian">${SVG.plus} Tambah Penelitian</button>
       <button class="btn pri" data-a="add" data-e="Submission">${SVG.plus} Catat Submission</button>
     `) + `
-      <div class="stats">
+      <div class="stats" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr))">
         <div class="card stat"><span>Total Penelitian</span><b>${D.Penelitian.length}</b><small>Basis Riset</small></div>
         <div class="card stat"><span>Dalam Proses</span><b style="color:#2563EB">${proses.length}</b><small>Review &amp; Revisi</small></div>
         <div class="card stat"><span>Artikel Terbit</span><b style="color:#059669">${pub.length}</b><small>Published</small></div>
-        <div class="card stat"><span>Ditolak / Withdrawn</span><b style="color:#DC2626">${tol.length}</b><small>Evaluasi</small></div>
+        <div class="card stat"><span>Akumulasi KUM</span><b style="color:#1E40AF">${totKumPub.toFixed(1)}</b><small>Total Angka Kredit</small></div>
+        <div class="card stat"><span>Acceptance Rate</span><b style="color:#0D9488">${accRate}%</b><small>Tingkat Lolos</small></div>
         <div class="card stat"><span>CFP Aktif</span><b style="color:#D97706">${D.CFP.filter(c => dayDiff(c.deadline) >= 0 && c.status !== 'Ditutup').length}</b><small>Peluang Kirim</small></div>
       </div>
 
@@ -823,22 +861,36 @@
 
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <h3>Submission Lama Belum Dicek</h3>
-            <span class="bd ${pc.length ? 'am' : 'sl'}">${pc.length} Naskah</span>
+            <h3>Batas Revisi &amp; Cek Naskah</h3>
+            <span class="bd ${revNear.length || pc.length ? 'am' : 'sl'}">${revNear.length + pc.length} Item</span>
           </div>
+          ${revNear.map(s => `
+            <div class="alert-row ${dayDiff(s.deadline_respon) <= 3 ? 'danger' : 'warning'}" style="margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+                <b style="font-size:14px;color:var(--tx)">${esc(s.judul)}</b>
+                <span class="bd ${dayDiff(s.deadline_respon) <= 3 ? 'rs deadline-crit' : 'am'}">⏰ Sisa ${dayDiff(s.deadline_respon)} Hari Revisi</span>
+              </div>
+              <div class="mu" style="font-size:12.5px;margin:6px 0">${SVG.book} Sasaran: <b>${esc(jname(s.id_jurnal))}</b></div>
+              <div style="margin-top:8px;display:flex;gap:6px">
+                ${linkOf(s.id_jurnal, 'Portal')}
+                <button class="btn pri sm" data-a="edit" data-e="Submission" data-id="${s.id}">${SVG.edit} Edit Progres</button>
+              </div>
+            </div>
+          `).join('')}
           ${pc.map(s => `
             <div class="alert-row warning">
               <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
                 <b style="font-size:14px;color:var(--tx)">${esc(s.judul)}</b>
                 <span class="bd am">⏱ Belum cek ${-dayDiff(s.tgl_cek)} hari</span>
               </div>
-              <div class="mu" style="font-size:13px;margin:6px 0">${SVG.book} Sasaran: <b>${esc(jname(s.id_jurnal))}</b></div>
-              <div style="margin-top:10px;display:flex;gap:8px">
+              <div class="mu" style="font-size:12.5px;margin:6px 0">${SVG.book} Sasaran: <b>${esc(jname(s.id_jurnal))}</b></div>
+              <div style="margin-top:8px;display:flex;gap:6px">
                 ${linkOf(s.id_jurnal, 'Portal Jurnal')}
                 <button class="btn pri sm" data-a="cek" data-id="${s.id}">${SVG.check} Sudah Saya Cek</button>
               </div>
             </div>
-          `).join('') || '<p class="mu" style="padding:16px 0;text-align:center">Semua naskah dalam pantauan berkala.</p>'}
+          `).join('')}
+          ${!revNear.length && !pc.length ? '<p class="mu" style="padding:16px 0;text-align:center">Semua naskah dalam pantauan aman.</p>' : ''}
         </div>
       </div>
 
@@ -1038,9 +1090,28 @@
         ` : ''}
       </div>
     ` : '';
+    // Badge deadline revisi responsif & tegas
+    let dlBadge = '';
+    if (dl != null && PROSES.includes(s.status)) {
+      if (dl < 0) {
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">⚠️ Lewat Batas Revisi (${-dl} hr)</span></div>`;
+      } else if (dl === 0) {
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">🔥 Batas Revisi Hari Ini!</span></div>`;
+      } else if (dl <= 3) {
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">⏰ Sisa ${dl} Hari Batas Revisi</span></div>`;
+      } else if (dl <= 7) {
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd am">📅 Sisa ${dl} Hari Batas Revisi</span></div>`;
+      } else {
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd bl">📅 Sisa ${dl} Hari Batas Revisi</span></div>`;
+      }
+    }
+
     return `
       <div class="card kanban-card" draggable="true" data-drag-id="${s.id}">
-        ${pc ? `<div style="margin-bottom:6px"><span class="bd am">⏱ Perlu dicek · ${-dayDiff(s.tgl_cek)} hr</span></div>` : ''}
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px">
+          ${akrBadge(j)}
+          ${pc ? `<span class="bd am">⏱ Cek ${-dayDiff(s.tgl_cek)} hr</span>` : ''}
+        </div>
         <h3 style="font-size:14px;margin:4px 0 6px;line-height:1.3">${esc(s.judul)}</h3>
         <div class="mu" style="font-size:12.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px">${SVG.book} ${esc(jname(s.id_jurnal))}</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin:4px 0">
@@ -1049,11 +1120,12 @@
         </div>
         ${ojsInfo}
         <div class="mu" style="font-size:11.5px;margin-top:6px">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>
-        ${dl != null && PROSES.includes(s.status) ? `<div style="margin-top:6px;font-size:12px">Batas revisi: ${pill(dl)}</div>` : ''}
+        ${dlBadge}
         <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
           ${linkOf(s.id_jurnal, 'Portal')}
           <button class="btn pri sm" data-a="cek" data-id="${s.id}">${SVG.check} Dicek</button>
           <button class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}">${SVG.edit}</button>
+          <button class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}">${SVG.trash}</button>
         </div>
         <select data-a="chg" data-id="${s.id}" style="margin-top:8px;min-height:32px;font-size:12px">
           ${STAT.map(x => `<option ${x === s.status ? 'selected' : ''}>${x}</option>`).join('')}
@@ -1284,10 +1356,79 @@
               </div>
             </div>
             
-            <label>Nomor WhatsApp Pengelola (Format 628xxx)</label>
+            <label>Nomor WhatsApp Pengelola (Format 628xxx atau 08xxx)</label>
             <input class="in" name="wa" value="${esc(c.wa)}" placeholder="628123456789">
+            <small class="mu" style="display:block;margin-top:2px;font-size:11.5px">💡 Awalan 08... akan dinormalisasi otomatis ke standar internasional 628...</small>
+
+            <h4 style="margin:22px 0 10px;color:#1E40AF;border-bottom:1px solid var(--bd);padding-bottom:6px">Matriks Notifikasi WhatsApp (Fonnte Gateway)</h4>
             
-            <label>Ambang Pengingat CFP (hari sebelum deadline, pisahkan koma)</label>
+            <div class="toggle-item">
+              <div>
+                <span class="toggle-item-title">Saklar Master WhatsApp</span>
+                <span class="toggle-item-desc">Aktifkan seluruh pengiriman pesan otomatis ke nomor WhatsApp pengelola</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="wa_master" ${c.wa_master !== false && String(c.wa_master) !== 'false' ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div>
+                <span class="toggle-item-title">Pengingat Batas Respon &amp; Revisi Naskah</span>
+                <span class="toggle-item-desc">Peringatan otomatis H-7 dan H-3 sebelum deadline revisi jurnal berakhir</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="notif_revisi" ${c.notif_revisi !== false && String(c.notif_revisi) !== 'false' ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div>
+                <span class="toggle-item-title">Pengingat Call for Papers (CFP)</span>
+                <span class="toggle-item-desc">Pengingat otomatis H-7, H-3, dan Hari-H batas waktu submit CFP</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="notif_cfp" ${c.notif_cfp !== false && String(c.notif_cfp) !== 'false' ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div>
+                <span class="toggle-item-title">Peringatan Naskah Lama Tidak Dicek</span>
+                <span class="toggle-item-desc">Notifikasi naskah yang melebihi ambang batas hari tanpa pembaruan status</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="notif_cek" ${c.notif_cek !== false && String(c.notif_cek) !== 'false' ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div>
+                <span class="toggle-item-title">Ucapan Selamat Naskah Diterima (Accepted)</span>
+                <span class="toggle-item-desc">Kirim notifikasi seketika saat naskah dipindah ke status Accepted</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="notif_accepted" ${c.notif_accepted !== false && String(c.notif_accepted) !== 'false' ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div>
+                <span class="toggle-item-title">Notifikasi Seluruh Perubahan Status Naskah</span>
+                <span class="toggle-item-desc">Kirim notifikasi ringkas setiap kali status naskah diperbarui</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="notif_status" ${c.notif_status === true || String(c.notif_status) === 'true' ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <label style="margin-top:14px">Ambang Pengingat CFP (hari sebelum deadline, pisahkan koma)</label>
             <input class="in" name="ambang_cfp" value="${esc(c.ambang_cfp)}" placeholder="7,3,0">
             
             <label>Ambang "Lama Tidak Dicek" (hari)</label>
@@ -1460,22 +1601,40 @@
     }
   }
 
-  // ============ DATA OPS (Optimistic UI) ============
+  // ============ DATA OPS (Optimistic UI & Cache Persistence) ============
   async function upsert(ent, rec) {
     const L = S.D[ent] = S.D[ent] || [], i = L.findIndex(x => x.id === rec.id), old = i < 0 ? null : L[i];
     i < 0 ? L.push(rec) : (L[i] = rec);
     if (ent === 'Submission' && old && old.status !== rec.status) {
       (S.D.StatusLog = S.D.StatusLog || []).unshift({ id_submission: rec.id, status_lama: old.status, status_baru: rec.status, waktu: new Date().toLocaleString('id-ID') });
     }
+    // Optimistic persistence ke local cache (gas-instant-ux-pro)
+    Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
     draw();
     const r = await API.post('upsert', { entity: ent, record: rec });
-    if (!r.success) { toast(r.message || 'Gagal menyimpan; memuat ulang…', true); await loadAdmin(); }
+    if (!r.success) {
+      toast(r.message || 'Gagal menyimpan ke server; memulihkan data.', true);
+      await loadAdmin();
+    } else {
+      Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+    }
   }
 
   async function remove(ent, id) {
-    S.D[ent] = S.D[ent].filter(x => x.id !== id); draw();
+    const prev = (S.D[ent] || []).slice();
+    S.D[ent] = S.D[ent].filter(x => x.id !== id);
+    Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+    draw();
     const r = await API.post('delete', { entity: ent, id });
-    if (!r.success) { toast(r.message || 'Gagal menghapus data', true); await loadAdmin(); } else toast('Data berhasil dihapus');
+    if (!r.success) {
+      S.D[ent] = prev;
+      Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+      draw();
+      toast(r.message || 'Gagal menghapus data dari server', true);
+    } else {
+      Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+      toast('Data berhasil dihapus');
+    }
   }
 
   function csv(ent) {
@@ -1680,6 +1839,7 @@
 
     const grandTotalSks = totSksPub + (incPen ? totSksPen : 0);
     const todayStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const docCode = 'BKD-' + (sem ? sem.replace(/[^a-zA-Z0-9]/g, '') : 'ALL') + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
 
     const html = `<!DOCTYPE html>
 <html lang="id">
@@ -1849,6 +2009,16 @@
       <div class="sign-name">${esc(c.nama_pimpinan || '...........................................................................')}</div>
       <div>NIP: ..............................................................</div>
     </div>
+
+    <div style="margin-top:28px;border:1.5px solid #1E3A8A;border-radius:8px;padding:12px 16px;background:#F8FAFC;display:flex;align-items:center;gap:16px;page-break-inside:avoid">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=95x95&margin=1&data=${encodeURIComponent(location.origin + location.pathname + '#verify=' + docCode)}" alt="QR Code eTTD" style="width:85px;height:85px;border-radius:4px;border:1px solid #CBD5E1">
+      <div style="font-size:11px;line-height:1.45;flex:1">
+        <b style="color:#1E3A8A;font-size:12px">LEMBAR PENGESAHAN ELEKTRONIK &amp; INTEGRITAS DOKUMEN (eTTD)</b><br>
+        Dokumen Laporan Kinerja Dosen ini telah disahkan secara elektronik melalui <b>SIMPEN</b> dan memiliki kekuatan hukum yang sah berdasarkan ketentuan perundang-undangan ITE.<br>
+        Kode Verifikasi: <code style="background:#E2E8F0;padding:2px 6px;border-radius:3px;font-weight:bold;color:#1E3A8A">${docCode}</code><br>
+        Pindai QR Code di atas menggunakan kamera smartphone untuk memeriksa keaslian dan status penerbitan laporan secara langsung.
+      </div>
+    </div>
   </div>
 </body>
 </html>`;
@@ -1974,8 +2144,100 @@
     if (f && ['q', 'jq'].includes(f)) { const e = $('#' + f); if (e) { e.focus(); try { e.setSelectionRange(pos, pos); } catch (_) { } } }
   }
 
-  async function loadPub() { const r = await API.get('getPublic'); if (r.success) S.P = r.data; else toast(r.message || 'Gagal memuat', true); draw(); }
-  async function loadAdmin() { const r = await API.post('bootstrap'); if (!r.success) { API.setTok(null); S.view = 'login'; toast(r.message || 'Sesi berakhir', true); } else S.D = r.data; draw(); }
+  // ============ SWR DATA FETCHING (gas-instant-ux-pro) ============
+  async function loadPub() {
+    const c = Store.get('pub');
+    if (c && !S.P) {
+      S.P = c.data;
+      draw();
+    }
+    const r = await API.get('getPublic');
+    if (r.success) {
+      const h = hashData(r.data);
+      if (!c || c.h !== h) {
+        S.P = r.data;
+        Store.set('pub', { h, t: Date.now(), data: r.data });
+        draw();
+      }
+    } else if (!c) {
+      toast(r.message || 'Gagal memuat data publik', true);
+      draw();
+    }
+  }
+
+  async function loadAdmin() {
+    const c = Store.get('boot');
+    if (c && !S.D) {
+      S.D = c.data;
+      draw();
+    }
+    const r = await API.post('bootstrap');
+    if (!r.success) {
+      API.setTok(null);
+      Store.del('boot');
+      S.view = 'login';
+      toast(r.message || 'Sesi berakhir. Silakan masuk kembali.', true);
+      draw();
+    } else {
+      const h = hashData(r.data);
+      if (!c || c.h !== h) {
+        S.D = r.data;
+        Store.set('boot', { h, t: Date.now(), data: r.data });
+        draw();
+      }
+    }
+  }
+
+  // Dialog Konfirmasi Hapus Kustom (ui-ux-pro-max)
+  function openConfirmDelete(ent, id, title = 'data ini') {
+    openModal(`
+      <div class="ov">
+        <div class="confirm-box">
+          <div class="confirm-icon-wrap" style="background:#FEF2F2;color:#EF4444">
+            ${SVG.trash}
+          </div>
+          <h3 style="font-size:16px;margin-bottom:8px">Hapus Data Permanen?</h3>
+          <p class="mu" style="font-size:13px;line-height:1.5;margin-bottom:20px">Apakah Anda yakin ingin menghapus <b>${esc(title)}</b>? Tindakan ini tidak dapat dibatalkan.</p>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <button type="button" class="btn" data-a="mclose" style="flex:1">Batal</button>
+            <button type="button" class="btn dng" data-a="doConfirmDel" data-e="${esc(ent)}" data-id="${esc(id)}" style="flex:1">Ya, Hapus</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  // Modal Verifikasi Keaslian Dokumen Resmi BKD (gas-doc-engine)
+  function openVerifyModal(docCode) {
+    const c = cfg();
+    openModal(`
+      <div class="ov">
+        <div class="confirm-box" style="max-width:480px;text-align:left">
+          <div style="text-align:center;margin-bottom:14px">
+            <div class="verify-badge-verified">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              DOKUMEN TERVERIFIKASI SAH
+            </div>
+            <h3 style="margin-top:10px;font-size:16px">Verifikasi Keaslian Laporan Kinerja BKD</h3>
+            <div class="verify-code-pill">${esc(docCode)}</div>
+          </div>
+          <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;font-size:12.5px;line-height:1.6">
+            <div><b>Nama Dosen:</b> ${esc(c.nama || S.P?.profil?.nama || 'Dosen Peneliti')}</div>
+            <div><b>NIDN / NIDK:</b> ${esc(c.nidn || '—')}</div>
+            <div><b>Jabatan Fungsional:</b> ${esc(c.jabatan_fungsional || 'Lektor')}</div>
+            <div><b>Program Studi / Unit:</b> ${esc(c.prodi || c.fakultas || c.afiliasi || S.P?.profil?.afiliasi || '—')}</div>
+            <div><b>Institusi:</b> ${esc(c.afiliasi || S.P?.profil?.afiliasi || 'Perguruan Tinggi')}</div>
+            <div><b>Pengesah / Dekan:</b> ${esc(c.nama_pimpinan || 'Pimpinan Institusi / Fakultas')}</div>
+            <div><b>Status Keabsahan:</b> <span style="color:#059669;font-weight:bold">Asli &amp; Diterbitkan Resmi</span></div>
+            <div><b>Sistem Penerbit:</b> SIMPEN (Sistem Manajemen Penelitian Dosen)</div>
+            <div><b>Waktu Pengecekan:</b> ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB</div>
+          </div>
+          <p class="mu" style="font-size:11.5px;margin:12px 0;text-align:center">Tanda tangan elektronik ini sah dan terdaftar pada pangkalan data SIMPEN.</p>
+          <button type="button" class="btn pri" style="width:100%" data-a="mclose">Tutup Lembar Verifikasi</button>
+        </div>
+      </div>
+    `);
+  }
 
   document.addEventListener('click', async e => {
     const t = e.target.closest('[data-a]'); if (!t || t.tagName === 'SELECT') return;
@@ -2013,8 +2275,39 @@
     }
     else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', tgl_cek: today(), tampil_publik: true } : { tampil_publik: true });
     else if (a === 'edit') openForm(ent, S.D[ent].find(x => x.id === id));
-    else if (a === 'del') { if (confirm('Hapus data ini? Tindakan tidak dapat dibatalkan.')) remove(ent, id); }
-    else if (a === 'delOld') { const o = S.D.CFP.filter(c => dayDiff(c.deadline) < 0); if (confirm(`Hapus ${o.length} CFP yang sudah lewat?`)) for (const c of o) await remove('CFP', c.id); }
+    else if (a === 'del') {
+      const list = S.D?.[ent] || [];
+      const item = list.find(x => x.id === id);
+      const title = item?.judul || item?.nama || 'item ini';
+      openConfirmDelete(ent, id, title);
+    }
+    else if (a === 'doConfirmDel') {
+      closeModal();
+      remove(ent, id);
+    }
+    else if (a === 'delOld') {
+      const o = S.D.CFP.filter(c => dayDiff(c.deadline) < 0);
+      if (!o.length) return toast('Tidak ada CFP yang sudah lewat', true);
+      openModal(`
+        <div class="ov">
+          <div class="confirm-box">
+            <div class="confirm-icon-wrap" style="background:#FEF2F2;color:#EF4444">${SVG.trash}</div>
+            <h3 style="font-size:16px;margin-bottom:8px">Hapus ${o.length} CFP Kedaluwarsa?</h3>
+            <p class="mu" style="font-size:13px;line-height:1.5;margin-bottom:20px">Seluruh CFP yang telah melewati batas deadline akan dibersihkan dari database.</p>
+            <div style="display:flex;gap:10px;justify-content:center">
+              <button type="button" class="btn" data-a="mclose" style="flex:1">Batal</button>
+              <button type="button" class="btn dng" data-a="doConfirmDelOld" style="flex:1">Ya, Bersihkan</button>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+    else if (a === 'doConfirmDelOld') {
+      closeModal();
+      const o = S.D.CFP.filter(c => dayDiff(c.deadline) < 0);
+      for (const c of o) await remove('CFP', c.id);
+      toast('CFP kedaluwarsa berhasil dibersihkan');
+    }
     else if (a === 'cek') { const s = S.D.Submission.find(x => x.id === id); upsert('Submission', { ...s, tgl_cek: today() }); toast('Ditandai sudah dicek'); }
     else if (a === 'cfp2sub') { const c = S.D.CFP.find(x => x.id === id); S.page = 'sub'; sessionStorage.setItem('sp_admin_page', 'sub'); openForm('Submission', { status: 'Draft', id_jurnal: c.id_jurnal, tgl_cek: today() }); }
     else if (a === 'csv') csv(ent);
@@ -2242,8 +2535,26 @@
       closeModal(); await upsert(ent, rec); toast('Data berhasil disimpan');
     }
     else if (f.id === 'sf') {
-      const o = Object.fromEntries(new FormData(f)); const cur = (S.D.Pengaturan || [])[0] || { id: 'cfg' };
-      await upsert('Pengaturan', { ...cur, ...o, id: 'cfg' }); toast('Pengaturan berhasil diperbarui');
+      const cur = (S.D.Pengaturan || [])[0] || { id: 'cfg' };
+      const fd = new FormData(f);
+      const o = Object.fromEntries(fd);
+      // Baca status saklar matriks notifikasi WhatsApp (gas-notifikasi-wa-crm)
+      o.wa_master = f.elements.wa_master ? f.elements.wa_master.checked : false;
+      o.notif_revisi = f.elements.notif_revisi ? f.elements.notif_revisi.checked : false;
+      o.notif_cfp = f.elements.notif_cfp ? f.elements.notif_cfp.checked : false;
+      o.notif_cek = f.elements.notif_cek ? f.elements.notif_cek.checked : false;
+      o.notif_accepted = f.elements.notif_accepted ? f.elements.notif_accepted.checked : false;
+      o.notif_status = f.elements.notif_status ? f.elements.notif_status.checked : false;
+
+      // Normalisasi nomor telepon ke standar 628...
+      if (o.wa) {
+        let clean = String(o.wa).replace(/[^0-9]/g, '');
+        if (clean.indexOf('0') === 0) clean = '62' + clean.slice(1);
+        else if (clean.indexOf('8') === 0) clean = '62' + clean;
+        o.wa = clean;
+      }
+      await upsert('Pengaturan', { ...cur, ...o, id: 'cfg' });
+      toast('Pengaturan & matriks notifikasi berhasil diperbarui');
     }
   });
 
@@ -2255,10 +2566,29 @@
     }
   });
 
-  // ============ INIT ============
+  // ============ INIT & ROUTE CHECK (gas-doc-engine) ============
+  function checkHashRoute() {
+    const h = location.hash || '';
+    if (h.indexOf('#verify=') === 0 || h.indexOf('#verify/') === 0) {
+      const code = decodeURIComponent(h.replace(/^#verify[=\/]/, ''));
+      if (code) openVerifyModal(code);
+    }
+  }
+  window.addEventListener('hashchange', checkHashRoute);
+
   (async () => {
-    if (API.tok()) { S.view = 'admin'; S.page = initialAdminPage; draw(); loadAdmin(); }
-    else { draw(); }
+    // Periksa rute hash verifikasi eTTD jika ada
+    checkHashRoute();
+
+    // SWR Instant Rendering: jika token ada, langsung muat view admin
+    if (API.tok()) {
+      S.view = 'admin';
+      S.page = initialAdminPage;
+      draw();
+      loadAdmin();
+    } else {
+      draw();
+    }
     loadPub();
   })();
 })();

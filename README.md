@@ -14,11 +14,11 @@
 | `js/api.js` | 1 KB | API layer: fetch ke Google Apps Script backend |
 | `js/app.js` | 44 KB | SPA utama: state management, render publik/admin, event handler |
 
-### **Backend (Google Apps Script)**
+### **Backend (Google Apps Script - Folder `backend/`)**
 | File | Ukuran | Fungsi |
 |------|--------|--------|
-| `Kode.gs` | 20 KB | Apps Script backend: auth, CRUD, WhatsApp, trigger, thumbnail |
-| `appsscript.json` | 1 KB | Manifest: oauth scopes, runtime V8, webapp config |
+| `backend/Kode.js` | 20 KB | Apps Script backend: auth, CRUD, WhatsApp, trigger, thumbnail |
+| `backend/appsscript.json` | 1 KB | Manifest: oauth scopes, runtime V8, webapp config |
 
 ---
 

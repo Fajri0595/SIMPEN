@@ -1,4 +1,5 @@
 # Backend Apps Script & Clasp config (jangan di-push ke publik)
+backend/
 Kode.js
 appsscript.json
 .clasp.json
