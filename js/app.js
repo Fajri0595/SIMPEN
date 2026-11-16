@@ -42,7 +42,13 @@
     logo: '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" aria-hidden="true"><polygon points="32,14 54,23 32,32 10,23" fill="#FFFFFF"/><path d="M19,27.2 L19,37 C19,41.5 24.5,44.5 32,44.5 C39.5,44.5 45,41.5 45,37 L45,27.2 L32,32.8 Z" fill="#CBD5E1"/><path d="M49,25 L52,36 L50.5,45 L48.5,45 L50,36 Z" fill="#F59E0B"/><circle cx="51.5" cy="26" r="2" fill="#F59E0B"/><path d="M16,48 C24,44 30,46 32,49 C34,46 40,44 48,48 L48,51 C40,47 34,49 32,52 C30,49 24,47 16,51 Z" fill="#93C5FD"/></svg>',
     eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
     eyeOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>',
-    copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
+    copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+    key: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>',
+    info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+    grid: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
+    list: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
+    reset: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>',
+    chart: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>'
   };
 
   // Cache Store & SWR Helpers (gas-instant-ux-pro)
@@ -243,7 +249,7 @@
       notice.style.background = '#FEF2F2';
       notice.style.border = '1px solid #FCA5A5';
       notice.style.color = '#991B1B';
-      notice.innerHTML = `⛔ <b>Data Sudah Ada di Database:</b> Jurnal "<b>${esc(dup.nama)}</b>" (${esc(akr(dup))}, ${esc(dup.penerbit || 'Penerbit')}) sudah pernah diinput. Sistem akan menolak penambahan data duplikat ini.`;
+      notice.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle">${SVG.alert} <b>Data Sudah Ada di Database:</b></span> Jurnal "<b>${esc(dup.nama)}</b>" (${esc(akr(dup))}, ${esc(dup.penerbit || 'Penerbit')}) sudah pernah diinput. Sistem akan menolak penambahan data duplikat ini.`;
       return;
     }
     
@@ -254,7 +260,7 @@
       notice.style.background = '#FFFBEB';
       notice.style.border = '1px solid #FCD34D';
       notice.style.color = '#92400E';
-      notice.innerHTML = `ℹ️ <b>Peringatan Kemiripan:</b> Ditemukan jurnal dengan nama serupa di database: "<b>${esc(sim.nama)}</b>" (${esc(akr(sim))}, ${esc(sim.penerbit || 'Penerbit')}). Mohon pastikan bukan jurnal yang sama.`;
+      notice.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle">${SVG.info} <b>Peringatan Kemiripan:</b></span> Ditemukan jurnal dengan nama serupa di database: "<b>${esc(sim.nama)}</b>" (${esc(akr(sim))}, ${esc(sim.penerbit || 'Penerbit')}). Mohon pastikan bukan jurnal yang sama.`;
       return;
     }
     
@@ -422,22 +428,22 @@
     let list = '';
     if (S.tab === 'pub') {
       list = pubs.map(x => `
-        <div class="card item">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-            <div style="display:flex;gap:8px;align-items:center">
+        <article class="pub-row">
+          <div class="pub-row-main">
+            <div class="pub-row-meta">
               ${pubIdx(x.indeks)}
               <span class="bd sl">${x.tahun_terbit ? 'Tahun ' + esc(x.tahun_terbit) : 'Terbit'}</span>
+              ${x.doi ? `<span class="mono bd bl" style="font-size:11px">DOI: ${esc(x.doi)}</span>` : ''}
             </div>
-            ${x.doi ? `<span class="mono bd bl" style="font-size:11px">${esc(x.doi)}</span>` : ''}
+            <h3>${esc(x.judul)}</h3>
+            <div class="pub-row-sub">
+              <span>${SVG.book} <b>${esc(x.jurnal)}</b></span>
+            </div>
           </div>
-          <h3>${esc(x.judul)}</h3>
-          <div class="mu" style="display:flex;align-items:center;gap:6px;font-size:13.5px">
-            ${SVG.book} <b>${esc(x.jurnal)}</b>
+          <div class="pub-row-act">
+            ${(x.link_final || x.doi) ? `<a class="btn pri sm" href="${esc(x.link_final || 'https://doi.org/' + x.doi)}" target="_blank" rel="noopener">${SVG.ext} Buka Artikel</a>` : '<span class="mu" style="font-size:12px">Tautan belum tersedia</span>'}
           </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-            ${(x.link_final || x.doi) ? `<a class="btn pri sm" href="${esc(x.link_final || 'https://doi.org/' + x.doi)}" target="_blank" rel="noopener">${SVG.ext} Buka Artikel / DOI</a>` : '<span class="mu" style="font-size:12px">Tautan artikel belum tersedia</span>'}
-          </div>
-        </div>
+        </article>
       `).join('') || '<div class="card mu" style="text-align:center;padding:32px">Belum ada publikasi yang sesuai pencarian.</div>';
     }
     
@@ -446,7 +452,7 @@
       list = (prosesList.map(x => {
         const st = STAGE[x.status] || 2, dl = dayDiff(x.deadline_respon);
         return `
-          <div class="card item">
+          <article class="card item">
             <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center">
               <div style="display:flex;gap:8px;align-items:center">
                 ${badge(x.status)}
@@ -459,7 +465,7 @@
             <div class="mu" style="font-size:13px;display:flex;gap:16px;flex-wrap:wrap;margin:8px 0">
               <span style="display:inline-flex;align-items:center;gap:4px">${SVG.calendar} Submit: <b>${fmt(x.tgl_submit)}</b></span>
               <span style="display:inline-flex;align-items:center;gap:4px">${SVG.clock} Update: <b>${fmt(x.tgl_cek)}</b></span>
-              ${x.deadline_respon ? `<span>⚠️ Batas respon: <b>${fmt(x.deadline_respon)}</b> ${dl != null ? pill(dl) : ''}</span>` : ''}
+              ${x.deadline_respon ? `<span style="display:inline-flex;align-items:center;gap:4px">${SVG.alert} Batas respon: <b>${fmt(x.deadline_respon)}</b> ${dl != null ? pill(dl) : ''}</span>` : ''}
             </div>
             <div class="steps-container">
               <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--mu);margin-bottom:4px">
@@ -468,33 +474,33 @@
               </div>
               <div class="steps">${STEPS.map((_, i) => `<i class="${i < st - 1 ? 'd' : i === st - 1 ? 'c' : ''}"></i>`).join('')}</div>
             </div>
-          </div>
+          </article>
         `;
-      }).join('') || '<div class="card mu" style="text-align:center;padding:32px;margin-bottom:16px">Belum ada naskah yang sedang dalam proses review atau revisi.</div>') + `<div class="card mu" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;font-size:13px">ℹ️ Catatan internal telaah naskah dan feedback reviewer bersifat rahasia dan tidak ditampilkan ke publik.</div>`;
+      }).join('') || '<div class="card mu" style="text-align:center;padding:32px;margin-bottom:16px">Belum ada naskah yang sedang dalam proses review atau revisi.</div>') + `<div class="card mu" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;font-size:13px;display:flex;align-items:center;gap:8px;padding:12px 16px">${SVG.info} <span>Catatan internal telaah naskah dan feedback reviewer bersifat rahasia dan tidak ditampilkan ke publik.</span></div>`;
     }
 
     if (S.tab === 'pen') {
       const penList = (P.penelitian || []).filter(matchPub);
       list = penList.map(x => `
-        <div class="card item">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-            <div style="display:flex;gap:8px;align-items:center">
+        <article class="pub-row">
+          <div class="pub-row-main">
+            <div class="pub-row-meta">
               <span class="bd ${x.status === 'Selesai' ? 'gr' : x.status === 'Berjalan' ? 'am' : 'sl'}">${esc(x.status)}</span>
               ${x.bidang ? `<span class="bd bl">${esc(x.bidang)}</span>` : ''}
+              <span class="mu" style="font-size:12px;display:inline-flex;align-items:center;gap:4px">${SVG.calendar} Mulai: ${fmt(x.tanggal_mulai)}</span>
             </div>
-            <div class="mu" style="font-size:12.5px;display:inline-flex;align-items:center;gap:4px">${SVG.calendar} Mulai: ${fmt(x.tanggal_mulai)}</div>
-          </div>
-          <h3>${esc(x.judul)}</h3>
-          <div class="mu" style="font-size:13px;display:flex;align-items:center;gap:6px">
-            ${SVG.user} <span><b>Kolaborator / Tim:</b> ${esc(x.kolaborator || 'Mandiri')}</span>
+            <h3>${esc(x.judul)}</h3>
+            <div class="pub-row-sub">
+              <span>${SVG.user} <b>Kolaborator / Tim:</b> ${esc(x.kolaborator || 'Mandiri')}</span>
+            </div>
           </div>
           ${(x.link_pdf || x.link_berkas) ? `
-            <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-              ${x.link_pdf ? `<a class="btn sm" href="${esc(x.link_pdf)}" target="_blank" rel="noopener">${SVG.file} Naskah PDF ${SVG.ext}</a>` : ''}
-              ${x.link_berkas ? `<a class="btn sm" href="${esc(x.link_berkas)}" target="_blank" rel="noopener">${SVG.folder} Berkas Drive ${SVG.ext}</a>` : ''}
+            <div class="pub-row-act">
+              ${x.link_pdf ? `<a class="btn sm" href="${esc(x.link_pdf)}" target="_blank" rel="noopener">${SVG.file} Naskah PDF</a>` : ''}
+              ${x.link_berkas ? `<a class="btn sm" href="${esc(x.link_berkas)}" target="_blank" rel="noopener">${SVG.folder} Berkas Drive</a>` : ''}
             </div>
           ` : ''}
-        </div>
+        </article>
       `).join('') || '<div class="card mu" style="text-align:center;padding:32px">Belum ada riset/penelitian yang ditampilkan ke publik.</div>';
     }
 
@@ -503,7 +509,7 @@
     
     const initials = esc((P.profil.nama || 'Dosen').split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase());
     const fotoUrl = esc(P.profil.foto || P.profil.foto_profil || '');
-    const avatarHtml = fotoUrl ? `<img src="${fotoUrl}" alt="${esc(P.profil.nama)}" width="68" height="68" fetchpriority="high">` : initials;
+    const avatarHtml = fotoUrl ? `<img src="${fotoUrl}" alt="${esc(P.profil.nama)}" width="72" height="72" fetchpriority="high">` : initials;
     const profileLinks = [
       hasRealProfileLink(P.profil.link_sinta) ? `<a href="${esc(P.profil.link_sinta)}" target="_blank" rel="noopener">SINTA Kemdikbud ${SVG.ext}</a>` : '',
       hasRealProfileLink(P.profil.link_scholar) ? `<a href="${esc(P.profil.link_scholar)}" target="_blank" rel="noopener">Google Scholar ${SVG.ext}</a>` : '',
@@ -523,6 +529,12 @@
             ${profileLinks ? `<div class="hero-badges">${profileLinks}</div>` : ''}
           </div>
         </div>
+        <div class="hero-metrics" aria-label="Ringkasan Portofolio Akademik">
+          <div class="hero-metric-item"><b>${P.publikasi.length}</b><span>Publikasi Terbit</span></div>
+          <div class="hero-metric-item"><b>${P.proses.length}</b><span>Dalam Proses</span></div>
+          <div class="hero-metric-item"><b>${totPen}</b><span>Proyek Riset</span></div>
+          <div class="hero-metric-item"><b>${P.jurnal.length}</b><span>Katalog Jurnal</span></div>
+        </div>
       </div>
     `;
 
@@ -534,39 +546,33 @@
           <div class="logo">${SVG.logo}</div>
           <div>
             <div class="brand-name">SIMPEN</div>
-            <small>${esc(P.profil.nama)} · ${esc(P.profil.afiliasi)}</small>
+            <small>Portal Manajemen Penelitian &amp; Publikasi Akademik</small>
           </div>
         </div>
         <button type="button" class="btn pri" data-a="goLogin">${SVG.user} Masuk Admin</button>
       </header>
       <main class="wrap">
         ${hero}
-        ${S.tab === 'jur' ? '' : `
-          <div class="stats">
-            <div class="card stat"><span>Publikasi Terbit</span><b>${P.publikasi.length}</b><small>Artikel Terverifikasi</small></div>
-            <div class="card stat"><span>Dalam Proses</span><b style="color:#2563EB">${P.proses.length}</b><small>Review &amp; Revisi</small></div>
-            <div class="card stat"><span>Riset &amp; Penelitian</span><b style="color:#059669">${totPen}</b><small>Proyek Riset</small></div>
-            <div class="card stat"><span>Katalog Jurnal</span><b style="color:#7C3AED">${P.jurnal.length}</b><small>Target Publikasi</small></div>
-          </div>
-        `}
-        <nav class="tabs" aria-label="Kategori Portofolio Publik">
-          ${[['pub', 'Publikasi Terbit'], ['proses', 'Dalam Proses'], ['pen', 'Riset & Penelitian'], ['jur', 'Katalog Jurnal']].map(([k, l]) => `<button type="button" data-a="tab" data-id="${k}" class="${S.tab === k ? 'on' : ''}">${l}</button>`).join('')}
-        </nav>
-        <h2 style="font-size:18px;margin:0 0 14px">${tabTitles[S.tab] || 'Portofolio Akademik'}</h2>
-        ${S.tab === 'jur' ? '' : `
-          <div class="card" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:12px 16px">
-            <div class="input-icon-wrap" style="flex:1;min-width:220px">
-              ${SVG.search}
-              <input class="in" id="q" aria-label="Cari judul artikel, topik riset, atau kolaborator" placeholder="Cari judul artikel, topik riset, atau kolaborator…" value="${esc(S.q)}">
+        <div class="toolbar-unified">
+          <nav class="tabs" aria-label="Kategori Portofolio Publik">
+            ${[['pub', 'Publikasi Terbit'], ['proses', 'Dalam Proses'], ['pen', 'Riset & Penelitian'], ['jur', 'Katalog Jurnal']].map(([k, l]) => `<button type="button" data-a="tab" data-id="${k}" class="${S.tab === k ? 'on' : ''}">${l}</button>`).join('')}
+          </nav>
+          ${S.tab === 'jur' ? '' : `
+            <div class="toolbar-filters">
+              <div class="input-icon-wrap">
+                ${SVG.search}
+                <input class="in" id="q" aria-label="Cari judul artikel, topik riset, atau kolaborator" placeholder="Cari judul artikel, topik riset, atau kolaborator…" value="${esc(S.q)}">
+              </div>
+              ${S.tab === 'pub' ? `
+                <select id="yr" aria-label="Filter tahun terbit" style="width:155px">
+                  <option value="">Semua Tahun</option>
+                  ${years.map(y => `<option value="${esc(y)}" ${y === S.yr ? 'selected' : ''}>Tahun ${esc(y)}</option>`).join('')}
+                </select>
+              ` : ''}
             </div>
-            ${S.tab === 'pub' ? `
-              <select id="yr" aria-label="Filter tahun terbit" style="width:160px">
-                <option value="">Semua tahun terbit</option>
-                ${years.map(y => `<option value="${esc(y)}" ${y === S.yr ? 'selected' : ''}>Tahun ${esc(y)}</option>`).join('')}
-              </select>
-            ` : ''}
-          </div>
-        `}
+          `}
+        </div>
+        <h2 style="font-size:17px;margin:0 0 14px">${tabTitles[S.tab] || 'Portofolio Akademik'}</h2>
         <div id="pub-list-region">${list}</div>
       </main>
       <footer class="wrap" style="padding-top:0;padding-bottom:36px">
@@ -710,10 +716,10 @@
     const kap = x => (x.jenis_kampus || 'PTN');
     const stats = `
       <div class="stats">
-        <div class="card stat"><span>Total Jurnal</span><b>${J.length}</b><small>Terdaftar</small></div>
-        <div class="card stat"><span>Jurnal PTN</span><b style="color:#B45309">${J.filter(x => kap(x) === 'PTN').length}</b><small>Perguruan Tinggi Negeri</small></div>
-        <div class="card stat"><span>Jurnal PTS</span><b style="color:#0E7490">${J.filter(x => kap(x) === 'PTS').length}</b><small>Perguruan Tinggi Swasta</small></div>
-        <div class="card stat"><span>Terakreditasi / Bereputasi</span><b style="color:#047857">${J.filter(x => akr(x) !== 'Non-Sinta').length}</b><small>SINTA &amp; Internasional</small></div>
+        <div class="card stat st-pri"><span>Total Jurnal</span><b>${J.length}</b><small>Terdaftar</small></div>
+        <div class="card stat"><span>Jurnal PTN</span><b>${J.filter(x => kap(x) === 'PTN').length}</b><small>Perguruan Tinggi Negeri</small></div>
+        <div class="card stat"><span>Jurnal PTS</span><b>${J.filter(x => kap(x) === 'PTS').length}</b><small>Perguruan Tinggi Swasta</small></div>
+        <div class="card stat st-suc"><span>Terakreditasi / Bereputasi</span><b>${J.filter(x => akr(x) !== 'Non-Sinta').length}</b><small>SINTA &amp; Internasional</small></div>
       </div>
     `;
     const bar = `
@@ -723,11 +729,11 @@
             ${SVG.search}
             <input class="in" id="q" aria-label="Cari nama jurnal, kampus, atau rumpun ilmu" placeholder="Cari nama jurnal, kampus, rumpun ilmu…" value="${esc(S.q)}">
           </div>
-          <div class="card" style="padding:4px;display:flex;gap:2px;box-shadow:none">
-            <button type="button" class="btn sm ${S.jview === 'grid' ? 'pri' : ''}" data-a="jview" data-id="grid" aria-label="Tampilan kartu">▦ Grid</button>
-            <button type="button" class="btn sm ${S.jview === 'list' ? 'pri' : ''}" data-a="jview" data-id="list" aria-label="Tampilan daftar">☰ List</button>
+          <div class="seg-group" role="group" aria-label="Mode tampilan katalog">
+            <button type="button" class="btn sm ${S.jview === 'grid' ? 'pri' : ''}" data-a="jview" data-id="grid" aria-label="Tampilan kartu">${SVG.grid} Grid</button>
+            <button type="button" class="btn sm ${S.jview === 'list' ? 'pri' : ''}" data-a="jview" data-id="list" aria-label="Tampilan daftar">${SVG.list} List</button>
           </div>
-          <button type="button" class="btn sm" data-a="resetf">⟲ Reset Filter</button>
+          <button type="button" class="btn sm" data-a="resetf">${SVG.reset} Reset Filter</button>
         </div>
         <div class="fgrid">
           ${sel('kampus', 'Jenis Kampus', [['', 'Semua'], ['PTN', 'PTN'], ['PTS', 'PTS'], ['Lainnya', 'Lainnya']], f.kampus)}
@@ -904,11 +910,11 @@
     `) + `
       <div class="stats" style="grid-template-columns:repeat(auto-fit, minmax(170px, 1fr))">
         <div class="card stat"><span>Total Penelitian</span><b>${D.Penelitian.length}</b><small>Basis Riset</small></div>
-        <div class="card stat"><span>Dalam Proses</span><b style="color:#2563EB">${proses.length}</b><small>Review &amp; Revisi</small></div>
-        <div class="card stat"><span>Artikel Terbit</span><b style="color:#059669">${pub.length}</b><small>Published</small></div>
-        <div class="card stat"><span>Akumulasi KUM</span><b style="color:#1E40AF">${totKumPub.toFixed(1)}</b><small>Total Angka Kredit</small></div>
-        <div class="card stat"><span>Acceptance Rate</span><b style="color:#0D9488">${accRate}%</b><small>Tingkat Lolos</small></div>
-        <div class="card stat"><span>CFP Aktif</span><b style="color:#D97706">${D.CFP.filter(c => dayDiff(c.deadline) >= 0 && c.status !== 'Ditutup').length}</b><small>Peluang Kirim</small></div>
+        <div class="card stat st-pri"><span>Dalam Proses</span><b>${proses.length}</b><small>Review &amp; Revisi</small></div>
+        <div class="card stat st-suc"><span>Artikel Terbit</span><b>${pub.length}</b><small>Published</small></div>
+        <div class="card stat st-pri"><span>Akumulasi KUM</span><b>${totKumPub.toFixed(1)}</b><small>Total Angka Kredit</small></div>
+        <div class="card stat st-suc"><span>Acceptance Rate</span><b>${accRate}%</b><small>Tingkat Lolos</small></div>
+        <div class="card stat st-wrn"><span>CFP Aktif</span><b>${D.CFP.filter(c => dayDiff(c.deadline) >= 0 && c.status !== 'Ditutup').length}</b><small>Peluang Kirim</small></div>
       </div>
 
       <h2 style="margin:28px 0 14px">Perlu Perhatian Segera</h2>
@@ -942,7 +948,7 @@
             <div class="alert-row ${dayDiff(s.deadline_respon) <= 3 ? 'danger' : 'warning'}" style="margin-bottom:8px">
               <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
                 <b style="font-size:14px;color:var(--tx)">${esc(s.judul)}</b>
-                <span class="bd ${dayDiff(s.deadline_respon) <= 3 ? 'rs deadline-crit' : 'am'}">⏰ Sisa ${dayDiff(s.deadline_respon)} Hari Revisi</span>
+                <span class="bd ${dayDiff(s.deadline_respon) <= 3 ? 'rs deadline-crit' : 'am'}">${SVG.clock} Sisa ${dayDiff(s.deadline_respon)} Hari Revisi</span>
               </div>
               <div class="mu" style="font-size:12.5px;margin:6px 0">${SVG.book} Sasaran: <b>${esc(jname(s.id_jurnal))}</b></div>
               <div style="margin-top:8px;display:flex;gap:6px">
@@ -955,7 +961,7 @@
             <div class="alert-row warning">
               <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
                 <b style="font-size:14px;color:var(--tx)">${esc(s.judul)}</b>
-                <span class="bd am">⏱ Belum cek ${-dayDiff(s.tgl_cek)} hari</span>
+                <span class="bd am">${SVG.clock} Belum cek ${-dayDiff(s.tgl_cek)} hari</span>
               </div>
               <div class="mu" style="font-size:12.5px;margin:6px 0">${SVG.book} Sasaran: <b>${esc(jname(s.id_jurnal))}</b></div>
               <div style="margin-top:8px;display:flex;gap:6px">
@@ -1102,8 +1108,8 @@
     `) + `
       <div class="stats">
         <div class="card stat"><span>Total Jurnal</span><b>${S.D.Jurnal.length}</b><small>Tersimpan</small></div>
-        <div class="card stat"><span>Bebas Biaya</span><b style="color:#059669">${S.D.Jurnal.filter(j => j.tipe_biaya === 'Gratis').length}</b><small>Gratis APC</small></div>
-        <div class="card stat"><span>Tampil di Publik</span><b style="color:#2563EB">${S.D.Jurnal.filter(j => j.tampil_publik).length}</b><small>Publik</small></div>
+        <div class="card stat st-suc"><span>Bebas Biaya</span><b>${S.D.Jurnal.filter(j => j.tipe_biaya === 'Gratis').length}</b><small>Gratis APC</small></div>
+        <div class="card stat st-pri"><span>Tampil di Publik</span><b>${S.D.Jurnal.filter(j => j.tampil_publik).length}</b><small>Publik</small></div>
       </div>
       <div class="card" style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
         <div class="input-icon-wrap" style="flex:1;min-width:240px">
@@ -1155,7 +1161,7 @@
     const kumInfo = hitungKumBkd(s, j);
     const ojsInfo = s.akun_ojs ? `
       <div style="margin-top:6px;padding:5px 8px;background:#F1F5F9;border-radius:6px;font-size:11.5px;display:flex;justify-content:space-between;align-items:center;gap:6px">
-        <span class="mono" style="font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Akun OJS: ${esc(s.akun_ojs)}">🔑 ${esc(s.akun_ojs)}</span>
+        <span class="mono" style="font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Akun OJS: ${esc(s.akun_ojs)}">${SVG.key} ${esc(s.akun_ojs)}</span>
         ${s.password_ojs ? `
           <div class="pwd-cell" style="display:inline-flex;align-items:center;gap:4px;padding:1px 5px">
             <span class="pwd-text mono" data-val="${esc(s.password_ojs)}" style="letter-spacing:1px;font-size:11px">••••••</span>
@@ -1165,19 +1171,18 @@
         ` : ''}
       </div>
     ` : '';
-    // Badge deadline revisi responsif & tegas
     let dlBadge = '';
     if (dl != null && PROSES.includes(s.status)) {
       if (dl < 0) {
-        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">⚠️ Lewat Batas Revisi (${-dl} hr)</span></div>`;
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">${SVG.alert} Lewat Batas Revisi (${-dl} hr)</span></div>`;
       } else if (dl === 0) {
-        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">🔥 Batas Revisi Hari Ini!</span></div>`;
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">${SVG.alert} Batas Revisi Hari Ini</span></div>`;
       } else if (dl <= 3) {
-        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">⏰ Sisa ${dl} Hari Batas Revisi</span></div>`;
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd rs deadline-crit">${SVG.clock} Sisa ${dl} Hari Revisi</span></div>`;
       } else if (dl <= 7) {
-        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd am">📅 Sisa ${dl} Hari Batas Revisi</span></div>`;
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd am">${SVG.calendar} Sisa ${dl} Hari Revisi</span></div>`;
       } else {
-        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd bl">📅 Sisa ${dl} Hari Batas Revisi</span></div>`;
+        dlBadge = `<div style="margin-top:6px;font-size:12px"><span class="bd bl">${SVG.calendar} Sisa ${dl} Hari Revisi</span></div>`;
       }
     }
 
@@ -1185,26 +1190,27 @@
       <div class="card kanban-card" draggable="true" data-drag-id="${s.id}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px">
           ${akrBadge(j)}
-          ${pc ? `<span class="bd am">⏱ Cek ${-dayDiff(s.tgl_cek)} hr</span>` : ''}
+          ${pc ? `<span class="bd am">${SVG.clock} Cek ${-dayDiff(s.tgl_cek)} hr</span>` : ''}
         </div>
-        <h3 style="font-size:14px;margin:4px 0 6px;line-height:1.3">${esc(s.judul)}</h3>
-        <div class="mu" style="font-size:12.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px">${SVG.book} ${esc(jname(s.id_jurnal))}</div>
+        <h3 style="font-size:13.5px;margin:4px 0 6px;line-height:1.35">${esc(s.judul)}</h3>
+        <div class="mu" style="font-size:12px;margin-bottom:6px;display:flex;align-items:center;gap:4px">${SVG.book} ${esc(jname(s.id_jurnal))}</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin:4px 0">
-          ${s.semester_bkd ? `<span class="bd bl" style="font-size:10px">🗓️ ${esc(s.semester_bkd)}</span>` : ''}
+          ${s.semester_bkd ? `<span class="bd bl" style="font-size:10px">${esc(s.semester_bkd)}</span>` : ''}
           <span class="bd gr" style="font-size:10px">KUM: ${kumInfo.kumDidapat} (${kumInfo.porsiTxt})</span>
         </div>
         ${ojsInfo}
-        <div class="mu" style="font-size:11.5px;margin-top:6px">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>
+        <div class="mu" style="font-size:11px;margin-top:6px">Submit: ${fmt(s.tgl_submit)} · Cek: ${fmt(s.tgl_cek)}</div>
         ${dlBadge}
-        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-          ${linkOf(s.id_jurnal, 'Portal')}
-          <button type="button" class="btn pri sm" data-a="cek" data-id="${s.id}">${SVG.check} Dicek</button>
-          <button type="button" class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}" aria-label="Ubah naskah ${esc(s.judul)}" title="Ubah naskah">${SVG.edit}</button>
-          <button type="button" class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}" aria-label="Hapus naskah ${esc(s.judul)}" title="Hapus naskah">${SVG.trash}</button>
+        <div class="kanban-card-foot">
+          <select data-a="chg" data-id="${s.id}" aria-label="Ubah status naskah ${esc(s.judul)}">
+            ${STAT.map(x => `<option ${x === s.status ? 'selected' : ''}>${x}</option>`).join('')}
+          </select>
+          <div class="row-actions">
+            <button type="button" class="btn pri sm" data-a="cek" data-id="${s.id}" title="Tandai sudah dicek">${SVG.check}</button>
+            <button type="button" class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}" aria-label="Ubah naskah ${esc(s.judul)}" title="Ubah naskah">${SVG.edit}</button>
+            <button type="button" class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}" aria-label="Hapus naskah ${esc(s.judul)}" title="Hapus naskah">${SVG.trash}</button>
+          </div>
         </div>
-        <select data-a="chg" data-id="${s.id}" aria-label="Ubah status naskah ${esc(s.judul)}" style="margin-top:8px;min-height:32px;font-size:12px">
-          ${STAT.map(x => `<option ${x === s.status ? 'selected' : ''}>${x}</option>`).join('')}
-        </select>
       </div>
     `;
   }
@@ -1213,20 +1219,22 @@
     let L = S.D.Submission; const q = S.q.toLowerCase().trim();
     L = L.filter(s => (!q || (s.judul + ' ' + jname(s.id_jurnal)).toLowerCase().includes(q)) && (!S.onlyCheck || perluCek(s)));
     const tgl = `
-      <div class="card" style="padding:4px;display:flex;box-shadow:none">
-        <button type="button" class="btn sm ${S.subv === 'kanban' ? 'pri' : ''}" data-a="subv" data-id="kanban">Kanban Board</button>
-        <button type="button" class="btn sm ${S.subv === 'tabel' ? 'pri' : ''}" data-a="subv" data-id="tabel">Tabel Data</button>
+      <div class="seg-group" role="group" aria-label="Mode tampilan submission">
+        <button type="button" class="btn sm ${S.subv === 'kanban' ? 'pri' : ''}" data-a="subv" data-id="kanban">${SVG.grid} Kanban Board</button>
+        <button type="button" class="btn sm ${S.subv === 'tabel' ? 'pri' : ''}" data-a="subv" data-id="tabel">${SVG.list} Tabel Data</button>
       </div>
     `;
     const J = Object.fromEntries((S.D?.Jurnal || []).map(j => [j.id, j]));
     const body = S.subv === 'kanban'
-      ? `<div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:16px">${STAT.map(st => `
+      ? `<div class="kanban-board">${STAT.map(st => `
           <div class="kanban-col" data-drop-status="${st}">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <h2 style="font-size:14px">${st}</h2>
+            <div class="kanban-col-head">
+              <h2 style="font-size:13.5px">${st}</h2>
               <span class="bd sl">${L.filter(s => s.status === st).length}</span>
             </div>
-            ${L.filter(s => s.status === st).map(subCard).join('')}
+            <div class="kanban-col-list">
+              ${L.filter(s => s.status === st).map(subCard).join('') || '<div class="mu" style="font-size:12px;text-align:center;padding:18px 8px">Kosong</div>'}
+            </div>
           </div>
         `).join('')}</div>`
       : `
@@ -1278,12 +1286,14 @@
                   <td>${badge(s.status)}</td>
                   <td>${fmt(s.tgl_submit)}</td>
                   <td>${fmt(s.tgl_cek)}</td>
-                  <td style="white-space:nowrap">
-                    ${linkOf(s.id_jurnal, 'Buka')}
-                    <button type="button" class="btn pri sm" data-a="cek" data-id="${s.id}">${SVG.check} Dicek</button>
-                    <button type="button" class="btn sm" data-a="hist" data-id="${s.id}">${SVG.clock} Riwayat</button>
-                    <button type="button" class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}">${SVG.edit} Ubah</button>
-                    <button type="button" class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}" aria-label="Hapus naskah ${esc(s.judul)}" title="Hapus naskah">${SVG.trash}</button>
+                  <td>
+                    <div class="row-actions">
+                      ${linkOf(s.id_jurnal, 'Buka')}
+                      <button type="button" class="btn pri sm" data-a="cek" data-id="${s.id}">${SVG.check} Dicek</button>
+                      <button type="button" class="btn sm" data-a="hist" data-id="${s.id}">${SVG.clock} Riwayat</button>
+                      <button type="button" class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}">${SVG.edit} Ubah</button>
+                      <button type="button" class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}" aria-label="Hapus naskah ${esc(s.judul)}" title="Hapus naskah">${SVG.trash}</button>
+                    </div>
                   </td>
                 </tr>
               `;}).join('') || '<tr><td colspan="9" class="mu" style="text-align:center;padding:24px">Belum ada submission.</td></tr>'}
@@ -1308,7 +1318,7 @@
         </label>
       </div>
       ${body}
-      <p class="mu" style="margin-top:16px;font-size:12.5px">💡 <b>Tips Alur Kerja:</b> Tarik &amp; letakkan (drag-and-drop) kartu naskah antar kolom status di papan Kanban untuk memperbarui progres publikasi secara otomatis.</p>
+      <p class="mu" style="margin-top:16px;font-size:12.5px;display:flex;align-items:center;gap:6px">${SVG.info} <span><b>Tips Alur Kerja:</b> Tarik &amp; letakkan (drag-and-drop) kartu naskah antar kolom status di papan Kanban untuk memperbarui progres publikasi secara otomatis.</span></p>
     `;
   }
 
@@ -1416,7 +1426,7 @@
                 <input class="in" id="sf_foto" name="foto" value="${esc(c.foto || '')}" placeholder="https://... URL direct link foto (.jpg, .png, Google Drive, ImgBB)">
               </div>
             </div>
-            <small class="mu" style="display:block;margin-top:4px;font-size:11.5px">💡 Masukkan link foto profil direct. Jika dikosongkan, avatar otomatis menampilkan inisial nama.</small>
+            <small class="mu" style="display:block;margin-top:4px;font-size:11.5px">Masukkan link foto profil direct. Jika dikosongkan, avatar otomatis menampilkan inisial nama.</small>
 
             <h3 style="margin:20px 0 8px;font-size:14.5px;color:#1E40AF;border-bottom:1px solid var(--bd);padding-bottom:6px">Tautan Profil Akademik (Tampil di Header Publik Bila Diisi)</h3>
             <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
@@ -1436,7 +1446,7 @@
             
             <label for="sf_wa">Nomor WhatsApp Pengelola (Format 628xxx atau 08xxx)</label>
             <input class="in" id="sf_wa" name="wa" value="${esc(c.wa)}" placeholder="628123456789">
-            <small class="mu" style="display:block;margin-top:2px;font-size:11.5px">💡 Awalan 08... akan dinormalisasi otomatis ke standar internasional 628...</small>
+            <small class="mu" style="display:block;margin-top:2px;font-size:11.5px">Awalan 08... akan dinormalisasi otomatis ke standar internasional 628...</small>
 
             <h3 style="margin:22px 0 10px;font-size:14.5px;color:#1E40AF;border-bottom:1px solid var(--bd);padding-bottom:6px">Matriks Notifikasi WhatsApp (Fonnte Gateway)</h3>
             
@@ -1623,7 +1633,7 @@
     const j = (S.D?.Jurnal || []).find(x => x.id === jurId);
     const k = hitungKumBkd({ peran_penulis: peran, total_penulis: total }, j);
     box.innerHTML = `
-      <div style="font-weight:700;margin-bottom:4px;color:#1E40AF">📊 Estimasi Perhitungan Angka Kredit (KUM) BKD:</div>
+      <div style="font-weight:700;margin-bottom:4px;color:#1E40AF;display:flex;align-items:center;gap:6px">${SVG.chart} <span>Estimasi Perhitungan Angka Kredit (KUM) BKD:</span></div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px">
         <span>Kategori: <b>${esc(k.labelKat)}</b> (KUM Maks: ${k.kumMaks})</span>
         <span>Porsi: <b>${esc(k.porsiTxt)}</b></span>
@@ -1633,6 +1643,11 @@
     `;
   }
 
+  const FULL_WIDTH_FIELDS = new Set([
+    'judul', 'nama', 'link', 'thumbnail', 'kolaborator', 'scope', 'catatan',
+    'id_penelitian', 'id_jurnal', 'link_berkas', 'link_pdf', 'link_feedback', 'link_final', 'tampil_publik'
+  ]);
+
   function openForm(ent, rec) {
     rec = rec || {};
     if (ent === 'Jurnal') rec = { jenis_kampus: 'PTN', ...rec, akreditasi: akr(rec) };
@@ -1640,30 +1655,41 @@
     openModal(`
       <div class="ov">
         <div class="mod" role="dialog" aria-modal="true" aria-labelledby="mf-title">
-          <h2 id="mf-title">${rec.id ? 'Ubah Data' : 'Tambah Baru'} ${ent}</h2>
-          <p class="mu" style="font-size:13px;margin-bottom:16px">Isi rincian informasi di bawah ini untuk pembaruan data sistem.</p>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+            <div>
+              <h2 id="mf-title">${rec.id ? 'Ubah Data' : 'Tambah Data'} ${ent}</h2>
+              <p class="mu" style="font-size:13px;margin:2px 0 0">Isi rincian informasi di bawah ini untuk pembaruan data sistem.</p>
+            </div>
+            <button type="button" class="btn sm" data-a="mclose" aria-label="Tutup form" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
           <form id="mf" data-e="${ent}" data-id="${esc(rec.id || '')}">
-            ${FIELDS[ent].map(f => {
-              const fid = `mf_${f[0]}`;
-              const v = rec[f[0]] ?? '', n = `id="${fid}" name="${f[0]}"`;
-              if (f[2] === 'check') return `<label for="${fid}" style="font-weight:600;display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer"><input type="checkbox" ${n} ${rec[f[0]] ? 'checked' : ''}> ${f[1]}</label>`;
-              let ctl = f[2] === 'textarea' ? `<textarea ${n}>${esc(v)}</textarea>` : f[2] === 'select' ? `<select ${n}>${opts(f, v)}</select>` : `<input class="in" ${n} type="${f[2]}" value="${esc(v)}">`;
-              if (ent === 'Jurnal' && f[0] === 'nama') {
-                ctl += `<div id="jurnal-dup-notice" style="display:none;margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12px;line-height:1.4"></div>`;
-              }
-              if (ent === 'Jurnal' && f[0] === 'thumbnail') {
-                ctl += `
-                  <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
-                    <button type="button" class="btn sm" data-a="thumb">🔍 Ambil Thumbnail Otomatis</button>
-                    <span class="mu" style="font-size:11.5px">atau tempel direct link cover (.jpg / .png / Google Drive)</span>
-                  </div>
-                  <div class="mu" style="font-size:11.5px;margin-top:6px;line-height:1.4">
-                    💡 <b>Rekomendasi Cover Buku:</b> Gunakan gambar cover edisi/isu (rasio potret A4/buku). Bisa salin direct URL dari web jurnal, upload ke <b>Postimages.org</b>, <b>ImgBB.com</b>, atau Google Drive (akses: 'Anyone with link').
-                  </div>
-                `;
-              }
-              return `<label for="${fid}">${f[1]}</label>${ctl}`;
-            }).join('')}
+            <div class="form-grid">
+              ${FIELDS[ent].map(f => {
+                const fid = `mf_${f[0]}`;
+                const isFull = FULL_WIDTH_FIELDS.has(f[0]);
+                const wrapCls = isFull ? 'form-field form-full' : 'form-field';
+                const v = rec[f[0]] ?? '', n = `id="${fid}" name="${f[0]}"`;
+                if (f[2] === 'check') {
+                  return `<div class="${wrapCls}"><label for="${fid}" style="font-weight:600;display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer"><input type="checkbox" ${n} ${rec[f[0]] ? 'checked' : ''}> ${f[1]}</label></div>`;
+                }
+                let ctl = f[2] === 'textarea' ? `<textarea ${n}>${esc(v)}</textarea>` : f[2] === 'select' ? `<select ${n}>${opts(f, v)}</select>` : `<input class="in" ${n} type="${f[2]}" value="${esc(v)}">`;
+                if (ent === 'Jurnal' && f[0] === 'nama') {
+                  ctl += `<div id="jurnal-dup-notice" style="display:none;margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12px;line-height:1.4"></div>`;
+                }
+                if (ent === 'Jurnal' && f[0] === 'thumbnail') {
+                  ctl += `
+                    <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+                      <button type="button" class="btn sm" data-a="thumb">${SVG.search} Ambil Thumbnail Otomatis</button>
+                      <span class="mu" style="font-size:11.5px">atau tempel direct link cover (.jpg / .png / Google Drive)</span>
+                    </div>
+                    <div class="mu" style="font-size:11.5px;margin-top:6px;line-height:1.4">
+                      <b>Rekomendasi Cover Buku:</b> Gunakan gambar cover edisi/isu (rasio potret A4/buku). Bisa salin direct URL dari web jurnal, upload ke Postimages.org, ImgBB.com, atau Google Drive (akses: 'Anyone with link').
+                    </div>
+                  `;
+                }
+                return `<div class="${wrapCls}"><label for="${fid}">${f[1]}</label>${ctl}</div>`;
+              }).join('')}
+            </div>
             ${ent === 'Submission' ? `
               <div id="sub-kum-preview" class="card" style="margin-top:14px;padding:12px 14px;background:#F0FDF4;border:1px solid #BBF7D0;font-size:12px;color:#166534"></div>
             ` : ''}
@@ -1772,8 +1798,8 @@
             <b style="font-size:17px;color:#047857">${grandTotalSks.toFixed(2)} <span style="font-size:12px;font-weight:normal">SKS</span></b>
           </div>
         </div>
-        <div style="margin-top:8px;font-size:12px;line-height:1.4;color:${grandTotalSks >= 2 ? '#065F46' : '#92400E'}">
-          ${grandTotalSks >= 2 ? '✅ <b>Memenuhi Rubrik BKD:</b> Beban kerja penelitian memenuhi batas minimal (standar: 2 s.d 4 SKS per semester).' : '⚠️ <b>Perhatian:</b> Total SKS penelitian di bawah 2 SKS. Pastikan naskah/laporan riset pada semester ini sudah dicatat.'}
+        <div style="margin-top:8px;font-size:12px;line-height:1.4;color:${grandTotalSks >= 2 ? '#065F46' : '#92400E'};display:flex;align-items:center;gap:6px">
+          ${grandTotalSks >= 2 ? `${SVG.check} <span><b>Memenuhi Rubrik BKD:</b> Beban kerja penelitian memenuhi batas minimal (standar: 2 s.d 4 SKS per semester).</span>` : `${SVG.alert} <span><b>Perhatian:</b> Total SKS penelitian di bawah 2 SKS. Pastikan naskah/laporan riset pada semester ini sudah dicatat.</span>`}
         </div>
       `;
     }
@@ -1840,11 +1866,11 @@
 
           <div class="act" style="margin-top:20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
             <button type="button" class="btn" data-a="mclose">Tutup</button>
-            <button type="button" class="btn" data-a="doBkdCsv" style="background:#059669;color:#fff;border-color:#059669;font-weight:600">
-              📊 Unduh Excel / CSV
+            <button type="button" class="btn" data-a="doBkdCsv">
+              ${SVG.download} Unduh Excel / CSV
             </button>
-            <button type="button" class="btn pri" data-a="doBkdPrint" style="font-weight:600">
-              🖨️ Cetak / PDF Resmi
+            <button type="button" class="btn pri" data-a="doBkdPrint">
+              ${SVG.print} Cetak / PDF Resmi
             </button>
           </div>
         </div>
@@ -1964,7 +1990,7 @@
 <body>
   <div class="no-print-bar">
     <span><b>Dokumen Siap Cetak / Simpan PDF:</b> Format resmi Laporan Kinerja Dosen (BKD) Bidang Riset &amp; Publikasi.</span>
-    <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+    <button class="btn-print" onclick="window.print()">Cetak / Simpan PDF</button>
   </div>
 
   <div class="kop">
@@ -2507,9 +2533,9 @@
     }
     else if (a === 'thumb') {
       const u = $('#mf [name=link]').value; if (!u) return toast('Isi tautan jurnal dulu', true);
-      t.textContent = 'Mengambil…';
+      t.innerHTML = 'Mengambil…';
       const r = await API.post('thumb', { url: u });
-      t.textContent = '🔍 Ambil Thumbnail Otomatis';
+      t.innerHTML = `${SVG.search} Ambil Thumbnail Otomatis`;
       if (r.success) { $('#mf [name=thumbnail]').value = r.thumbnail; toast('Thumbnail berhasil diambil'); } else toast(r.message || 'Thumbnail tidak ditemukan', true);
     }
     else if (a === 'testwa') {
@@ -2675,7 +2701,7 @@
             notice.style.background = '#FEF2F2';
             notice.style.border = '1px solid #FCA5A5';
             notice.style.color = '#991B1B';
-            notice.innerHTML = `⛔ <b>Data Duplikat Ditolak:</b> Jurnal "<b>${esc(dup.nama)}</b>" (${esc(akr(dup))}, ${esc(dup.penerbit || 'Penerbit')}) sudah ada di database. Sistem menolak penambahan data duplikat ini.`;
+            notice.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle">${SVG.alert} <b>Data Duplikat Ditolak:</b></span> Jurnal "<b>${esc(dup.nama)}</b>" (${esc(akr(dup))}, ${esc(dup.penerbit || 'Penerbit')}) sudah ada di database. Sistem menolak penambahan data duplikat ini.`;
           }
           return;
         }
