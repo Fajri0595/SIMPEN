@@ -1017,6 +1017,24 @@ tr:hover td {
 .form-full {
   grid-column: 1 / -1;
 }
+.form-sec-head {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pri);
+  padding: 10px 0 4px;
+  margin-top: 6px;
+  border-bottom: 1px solid var(--bd);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-sec-head:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
 
 /* Toast */
 #toast {
@@ -1266,85 +1284,101 @@ tr:hover td {
   margin-top: 14px;
 }
 
-/* Kanban Board */
-.kanban-board {
+/* Workflow Guide Banner & Quick Status Filter Pills */
+.workflow-hint {
   display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 16px;
   align-items: flex-start;
-}
-.kanban-col {
-  min-width: 288px;
-  width: 288px;
-  max-height: calc(100vh - 220px);
-  background: var(--surface-alt);
-  border-radius: var(--r-lg);
-  padding: 12px;
-  border: 1px solid var(--bd);
-  transition: var(--trans);
-  display: flex;
-  flex-direction: column;
-}
-.kanban-col-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 2px 4px 10px;
-  border-bottom: 1px solid var(--bd);
-  margin-bottom: 10px;
-}
-.kanban-col-list {
-  overflow-y: auto;
-  flex: 1;
-  padding-right: 2px;
-}
-.kanban-col.drag-over {
-  background: #EFF6FF;
-  border: 2px dashed #2563EB;
-}
-.kanban-card {
-  cursor: grab;
-  user-select: none;
-  background: var(--surface);
-  border: 1px solid var(--bd);
+  gap: 10px;
+  background: var(--pri-light);
+  border: 1px solid var(--inf-bd);
   border-radius: var(--r-md);
-  padding: 13px 14px;
-  margin-bottom: 10px;
-  box-shadow: var(--sh-xs);
+  padding: 11px 16px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--inf-tx);
+}
+.workflow-hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.status-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--bd);
+  background: var(--surface);
+  color: var(--tx-sec);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
   transition: var(--trans);
 }
-.kanban-card:hover {
-  box-shadow: var(--sh-sm);
-  border-color: var(--bd-hover);
-}
-.kanban-card:active {
-  cursor: grabbing;
-}
-.kanban-card.dragging {
-  opacity: 0.35;
-  transform: scale(0.96);
-}
-.kanban-card-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--bd);
-}
-.kanban-card-foot select {
-  min-height: 30px;
-  height: 30px;
-  padding: 2px 8px;
-  font-size: 11.5px;
-  font-weight: 600;
-  border-radius: var(--r-sm);
+.status-pill:hover {
   background: var(--surface-alt);
-  width: auto;
-  flex: 1;
+  border-color: var(--bd-hover);
+  color: var(--tx);
 }
+.status-pill.on {
+  background: var(--pri);
+  border-color: var(--pri);
+  color: #FFFFFF;
+  box-shadow: var(--sh-xs);
+}
+.status-pill b {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--r-full);
+  background: var(--surface-alt);
+  color: var(--mu);
+  font-weight: 700;
+}
+.status-pill.on b {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+.inline-status-select {
+  min-height: 32px;
+  height: 32px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--bd);
+  background: var(--surface);
+  color: var(--tx);
+  cursor: pointer;
+  width: 165px;
+  transition: var(--trans);
+}
+.inline-status-select.st-sl { background: var(--surface-alt); color: var(--tx-sec); border-color: var(--bd); }
+.inline-status-select.st-bl { background: var(--inf-bg); color: var(--inf-tx); border-color: var(--inf-bd); }
+.inline-status-select.st-am { background: var(--wrn-bg); color: var(--wrn-tx); border-color: var(--wrn-bd); }
+.inline-status-select.st-gr { background: var(--suc-bg); color: var(--suc-tx); border-color: var(--suc-bd); }
+.inline-status-select.st-rs { background: var(--dng-bg); color: var(--dng-tx); border-color: var(--dng-bd); }
+.mini-steps {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  max-width: 150px;
+  margin-top: 6px;
+}
+.mini-steps i {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--bd);
+  display: block;
+}
+.mini-steps i.d { background: var(--accent); }
+.mini-steps i.c { background: #F59E0B; }
 
 /* ============ PAGINATION ============ */
 .pag-wrap {
