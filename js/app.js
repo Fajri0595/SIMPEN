@@ -92,7 +92,10 @@
     grid: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
     list: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
     reset: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>',
-    chart: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>'
+    chart: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>',
+    upload: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>',
+    mail: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+    quote: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path></svg>'
   };
 
   // Cache Store & SWR Helpers (gas-instant-ux-pro)
@@ -122,15 +125,28 @@
   const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, pubErr: '', q: '', yr: '', jq: '', jbiaya: '', subFilter: 'all', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid', pubJurPage: 1, pubJurPerPage: 12, adminJurPage: 1, adminJurPerPage: 10 };
   const ENT_LABEL = { Penelitian: 'Proyek Riset', Jurnal: 'Jurnal Sasaran', Submission: 'Artikel & Publikasi', CFP: 'Call for Papers (CFP)' };
 
-  const SEMESTERS = [
-    ['', '- Pilih Semester BKD -'],
-    ['2025/2026 Genap', '2025/2026 Genap'],
-    ['2025/2026 Ganjil', '2025/2026 Ganjil'],
-    ['2024/2025 Genap', '2024/2025 Genap'],
-    ['2024/2025 Ganjil', '2024/2025 Ganjil'],
-    ['2023/2024 Genap', '2023/2024 Genap'],
-    ['2023/2024 Ganjil', '2023/2024 Ganjil']
-  ];
+  function buildSemesterList() {
+    const now = new Date();
+    const curY = now.getFullYear();
+    const list = [];
+    for (let y = curY + 1; y >= curY - 4; y--) {
+      list.push(`${y - 1}/${y} Genap`);
+      list.push(`${y - 1}/${y} Ganjil`);
+    }
+    const existing = [
+      ...(S.D?.Submission || []).map(x => x.semester_bkd),
+      ...(S.D?.Penelitian || []).map(x => x.semester_bkd)
+    ].filter(Boolean);
+    existing.forEach(s => { if (!list.includes(s)) list.push(s); });
+    return list;
+  }
+  const getSemOptions = () => [['', '- Pilih Semester BKD -'], ...buildSemesterList().map(s => [s, s])];
+  const currentSemester = () => {
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+    if (m >= 2 && m <= 7) return `${y - 1}/${y} Genap`;
+    if (m >= 8) return `${y}/${y + 1} Ganjil`;
+    return `${y - 1}/${y} Ganjil`;
+  };
 
   const PERAN_PENULIS = [
     ['Penulis Pertama & Korespondensi', 'Penulis Pertama & Korespondensi (Porsi 60%)'],
@@ -145,7 +161,8 @@
     ambang_cek: 14, ambang_cfp: '7,3,0', jam: '08:00',
     nidn: '', nip: '', jabatan_fungsional: 'Lektor', prodi: '', fakultas: '',
     nama_asesor_1: '', nama_asesor_2: '', nama_pimpinan: '',
-    wa_master: true, notif_revisi: true, notif_cfp: true, notif_cek: true, notif_accepted: true, notif_status: false
+    wa_master: true, notif_revisi: true, notif_cfp: true, notif_cek: true, notif_accepted: true, notif_status: false,
+    notif_mingguan: false, app_url: ''
   }, (S.D && S.D.Pengaturan && S.D.Pengaturan[0]) || {});
   const jname = id => ((S.D?.Jurnal || []).find(j => j.id === id) || {}).nama || '-';
   const pname = id => ((S.D?.Penelitian || []).find(p => p.id === id) || {}).judul || '';
@@ -312,6 +329,151 @@
     
     notice.style.display = 'none';
     inputEl.style.borderColor = '';
+  }
+
+  function findSimilarSubmission(judul, curId) {
+    const targetClean = normCleanJournalName(judul);
+    if (targetClean.length < 8) return null;
+    const list = S.D?.Submission || [];
+    return list.find(s => {
+      if (curId && String(s.id) === String(curId)) return false;
+      const sClean = normCleanJournalName(s.judul);
+      if (!sClean) return false;
+      return sClean === targetClean || (sClean.length >= 10 && (sClean.includes(targetClean) || targetClean.includes(sClean)));
+    }) || null;
+  }
+
+  function checkSubmissionDuplicateLive(inputEl) {
+    const f = inputEl.form;
+    if (!f || f.dataset.e !== 'Submission') return;
+    const curId = f.dataset.id || '';
+    const val = inputEl.value.trim();
+    const notice = $('#sub-dup-notice');
+    if (!notice) return;
+    if (!val) {
+      notice.style.display = 'none';
+      inputEl.style.borderColor = '';
+      return;
+    }
+    const sim = findSimilarSubmission(val, curId);
+    if (sim) {
+      inputEl.style.borderColor = '#F59E0B';
+      notice.style.display = 'block';
+      notice.style.background = '#FFFBEB';
+      notice.style.border = '1px solid #FCD34D';
+      notice.style.color = '#92400E';
+      notice.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;vertical-align:middle">${SVG.info} <b>Catatan Kemiripan Judul:</b></span> Naskah serupa sudah tercatat di <b>${esc(jname(sim.id_jurnal))}</b> (Status: <b>${esc(sim.status)}</b>). Pastikan ini bukan duplikasi entri yang tidak disengaja.`;
+      return;
+    }
+    notice.style.display = 'none';
+    inputEl.style.borderColor = '';
+  }
+
+  function applyStatusAutoFields(rec, oldStatus) {
+    const next = { ...rec };
+    if (next.status === 'Submitted' && !next.tgl_submit) {
+      next.tgl_submit = today();
+    }
+    if (next.status === 'Published' && !next.tahun_terbit) {
+      next.tahun_terbit = String(new Date().getFullYear());
+    }
+    if (oldStatus !== next.status && !next.tgl_cek) {
+      next.tgl_cek = today();
+    }
+    return next;
+  }
+
+  function parseBibtex(raw) {
+    const text = String(raw || '');
+    const entries = [];
+    let idx = 0;
+    while (idx < text.length) {
+      const at = text.indexOf('@', idx);
+      if (at < 0) break;
+      const braceStart = text.indexOf('{', at);
+      if (braceStart < 0) break;
+      const type = text.slice(at + 1, braceStart).trim().toLowerCase();
+      let depth = 0, end = braceStart;
+      for (let i = braceStart; i < text.length; i++) {
+        if (text[i] === '{') depth++;
+        else if (text[i] === '}') {
+          depth--;
+          if (depth === 0) { end = i; break; }
+        }
+      }
+      if (depth !== 0) break;
+      idx = end + 1;
+      if (type === 'comment' || type === 'preamble' || type === 'string') continue;
+
+      const body = text.slice(braceStart + 1, end);
+      const comma = body.indexOf(',');
+      if (comma < 0) continue;
+      const fieldsStr = body.slice(comma + 1);
+      const fields = {};
+      let p = 0;
+      while (p < fieldsStr.length) {
+        while (p < fieldsStr.length && /[\s,]/.test(fieldsStr[p])) p++;
+        if (p >= fieldsStr.length) break;
+        const eq = fieldsStr.indexOf('=', p);
+        if (eq < 0) break;
+        const key = fieldsStr.slice(p, eq).trim().toLowerCase();
+        p = eq + 1;
+        while (p < fieldsStr.length && /\s/.test(fieldsStr[p])) p++;
+        if (p >= fieldsStr.length) break;
+
+        let val = '';
+        if (fieldsStr[p] === '{') {
+          let d = 0, s = p + 1;
+          while (p < fieldsStr.length) {
+            if (fieldsStr[p] === '{') d++;
+            else if (fieldsStr[p] === '}') {
+              d--;
+              if (d === 0) { val = fieldsStr.slice(s, p); p++; break; }
+            }
+            p++;
+          }
+        } else if (fieldsStr[p] === '"') {
+          let s = p + 1; p++;
+          while (p < fieldsStr.length && (fieldsStr[p] !== '"' || fieldsStr[p - 1] === '\\')) p++;
+          val = fieldsStr.slice(s, p);
+          p++;
+        } else {
+          let s = p;
+          while (p < fieldsStr.length && fieldsStr[p] !== ',') p++;
+          val = fieldsStr.slice(s, p);
+        }
+        fields[key] = val.replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+      }
+      if (fields.title) {
+        entries.push({
+          title: fields.title,
+          journal: fields.journal || fields.booktitle || fields.publisher || '',
+          year: (fields.year || '').replace(/[^0-9]/g, '').slice(0, 4),
+          doi: fields.doi || '',
+          url: fields.url || '',
+          author: fields.author || ''
+        });
+      }
+    }
+    return entries;
+  }
+
+  function formatAuthorApa(name) {
+    const cleanName = String(name || 'Dosen').split(',')[0].trim();
+    const parts = cleanName.split(/\s+/).filter(Boolean);
+    if (parts.length <= 1) return cleanName;
+    const last = parts[parts.length - 1];
+    const initials = parts.slice(0, -1).map(w => w[0].toUpperCase() + '.').join(' ');
+    return `${last}, ${initials}`;
+  }
+
+  function formatAuthorIeee(name) {
+    const cleanName = String(name || 'Dosen').split(',')[0].trim();
+    const parts = cleanName.split(/\s+/).filter(Boolean);
+    if (parts.length <= 1) return cleanName;
+    const last = parts[parts.length - 1];
+    const initials = parts.slice(0, -1).map(w => w[0].toUpperCase() + '.').join(' ');
+    return `${initials} ${last}`;
   }
   const formatImgUrl = url => {
     if (!url) return '';
@@ -487,6 +649,7 @@
             </div>
           </div>
           <div class="pub-row-act">
+            <button type="button" class="btn sm" data-a="cite" data-id="${esc(x.id)}" title="Salin format sitasi APA atau IEEE">${SVG.quote} Salin Sitasi</button>
             ${(x.link_final || x.doi) ? `<a class="btn pri sm" href="${esc(x.link_final || 'https://doi.org/' + x.doi)}" target="_blank" rel="noopener">${SVG.ext} Buka Artikel</a>` : '<span class="mu" style="font-size:12px">Tautan belum tersedia</span>'}
           </div>
         </article>
@@ -1264,6 +1427,7 @@
 
     return head('Artikel & Publikasi Jurnal', 'Kelola naskah artikel ilmiah dari tahap draf, pengiriman OJS, revisi reviewer, hingga terbit ber-DOI & KUM BKD', `
       <button type="button" class="btn" data-a="pdfBkd">${SVG.print} Laporan BKD &amp; KUM</button>
+      <button type="button" class="btn" data-a="importBib">${SVG.upload} Impor BibTeX</button>
       <button type="button" class="btn" data-a="csv" data-e="Submission">${SVG.download} Ekspor Excel</button>
       <button type="button" class="btn pri" data-a="add" data-e="Submission">${SVG.plus} Tambah Artikel Baru</button>
     `) + `
@@ -1315,6 +1479,8 @@
               const stNum = stageNumOf(s.status);
               const parentPen = pname(s.id_penelitian);
               const buktiUrl = s.link_final || (s.doi ? 'https://doi.org/' + s.doi : '');
+              const inProses = PROSES.includes(s.status);
+              const waitDays = (inProses && s.tgl_submit) ? -dayDiff(s.tgl_submit) : null;
 
               let dlBadge = '';
               if (dl != null && PROSES.includes(s.status)) {
@@ -1378,11 +1544,13 @@
                     <div class="mu" style="font-size:11px;margin-top:5px">
                       Submit: <b>${fmt(s.tgl_submit)}</b><br>
                       Cek: <b>${fmt(s.tgl_cek)}</b>
+                      ${waitDays !== null && waitDays >= 0 ? `<br>Menunggu: <b>${waitDays} hari</b>` : ''}
                     </div>
                   </td>
                   <td>
                     <div class="row-actions">
                       <button type="button" class="btn pri sm" data-a="cek" data-id="${s.id}" title="Tandai sudah dicek hari ini">${SVG.check} Dicek</button>
+                      ${inProses ? `<button type="button" class="btn sm" data-a="followup" data-id="${s.id}" title="Buat template email follow-up ke editor">${SVG.mail} Follow-up</button>` : ''}
                       <button type="button" class="btn sm" data-a="hist" data-id="${s.id}" title="Riwayat perubahan status">${SVG.clock}</button>
                       <button type="button" class="btn sm" data-a="edit" data-e="Submission" data-id="${s.id}">${SVG.edit} Ubah</button>
                       <button type="button" class="btn sm dng" data-a="del" data-e="Submission" data-id="${s.id}" aria-label="Hapus artikel ${esc(s.judul)}" title="Hapus artikel">${SVG.trash}</button>
@@ -1592,6 +1760,17 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
+
+            <div class="toggle-item">
+              <div>
+                <span class="toggle-item-title">Ringkasan Progres Mingguan (Senin Pagi)</span>
+                <span class="toggle-item-desc">Rekap jumlah artikel dalam proses review, Accepted, dan Draft setiap hari Senin</span>
+              </div>
+              <label class="toggle-switch" for="sf_notif_mingguan">
+                <input type="checkbox" id="sf_notif_mingguan" name="notif_mingguan" aria-label="Ringkasan Progres Mingguan" ${c.notif_mingguan === true || String(c.notif_mingguan) === 'true' ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
             
             <label for="sf_ambang_cfp" style="margin-top:14px">Ambang Pengingat CFP (hari sebelum deadline, pisahkan koma)</label>
             <input class="in" id="sf_ambang_cfp" name="ambang_cfp" value="${esc(c.ambang_cfp)}" placeholder="7,3,0">
@@ -1635,7 +1814,7 @@
       ['bidang', 'Bidang / Disiplin Ilmu', 'text'],
       ['tanggal_mulai', 'Tanggal Mulai', 'date'],
       ['status', 'Status Pelaksanaan', 'select', [['Draft'], ['Berjalan'], ['Selesai']]],
-      ['semester_bkd', 'Periode Semester BKD (Opsional)', 'select', SEMESTERS],
+      ['semester_bkd', 'Periode Semester BKD (Opsional)', 'select', 'sem'],
       ['sks_bkd', 'Beban SKS BKD (Opsional, default: 2 s.d 3)', 'text'],
       ['kolaborator', 'Anggota Tim / Kolaborator (pisahkan titik koma)', 'textarea'],
       ['__sec', '2. Tautan Berkas Laporan & Visibilitas'],
@@ -1665,7 +1844,7 @@
       ['judul', 'Judul Naskah Artikel Ilmiah *', 'text'],
       ['id_jurnal', 'Jurnal Sasaran Tujuan', 'select', 'jur'],
       ['status', 'Status Tahapan Saat Ini', 'select', STAT.map(x => [x])],
-      ['semester_bkd', 'Periode Semester BKD', 'select', SEMESTERS],
+      ['semester_bkd', 'Periode Semester BKD', 'select', 'sem'],
       ['peran_penulis', 'Peran / Posisi Penulis (KUM BKD)', 'select', PERAN_PENULIS],
       ['total_penulis', 'Jumlah Total Penulis', 'number'],
       ['sks_bkd', 'Beban SKS BKD (Kosongkan agar otomatis)', 'text'],
@@ -1700,9 +1879,13 @@
     let o = f[3];
     if (o === 'pen') o = [['', '- Artikel Mandiri (Tanpa Proyek Riset Induk) -'], ...S.D.Penelitian.map(p => [p.id, p.judul])];
     else if (o === 'jur') o = [['', '- Pilih Jurnal Sasaran -'], ...S.D.Jurnal.map(j => [j.id, j.nama])];
+    else if (o === 'sem') o = getSemOptions();
     else if (Array.isArray(o)) {
       o = o.slice();
-      if (v && !o.some(([a]) => a === v)) o.unshift([v, v]);
+    }
+    if (v && Array.isArray(o) && !o.some(([a]) => a === v)) {
+      o = o.slice();
+      o.unshift([v, v]);
     }
     return (o || []).map(([a, b]) => `<option value="${esc(a)}" ${a === v ? 'selected' : ''}>${esc(b || a)}</option>`).join('');
   };
@@ -1766,7 +1949,10 @@
                 }
                 let ctl = f[2] === 'textarea' ? `<textarea ${n}>${esc(v)}</textarea>` : f[2] === 'select' ? `<select ${n}>${opts(f, v)}</select>` : `<input class="in" ${n} type="${f[2]}" value="${esc(v)}">`;
                 if (ent === 'Jurnal' && f[0] === 'nama') {
-                  ctl += `<div id="jurnal-dup-notice" style="display:none;margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12px;line-height:1.4"></div>`;
+                  ctl += `<div id="jurnal-dup-notice" class="dup-notice"></div>`;
+                }
+                if (ent === 'Submission' && f[0] === 'judul') {
+                  ctl += `<div id="sub-dup-notice" class="dup-notice"></div>`;
                 }
                 if (ent === 'Jurnal' && f[0] === 'thumbnail') {
                   ctl += `
@@ -1833,9 +2019,14 @@
 
   function csv(ent) {
     const L = S.D[ent] || []; if (!L.length) return toast('Tidak ada data untuk diekspor', true);
-    const k = Object.keys(L[0]).filter(x => !/catatan|link_feedback/.test(x));
+    const hidden = new Set(['catatan', 'link_feedback', 'password_ojs', 'akun_ojs']);
+    const k = Object.keys(L[0]).filter(x => !hidden.has(x));
     const t = [k.join(','), ...L.map(r => k.map(x => '"' + String(r[x] ?? '').replace(/"/g, '""') + '"').join(','))].join('\n');
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv' })); a.download = `SIMPEN-${ent}-${today()}.csv`; a.click();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv;charset=utf-8' }));
+    a.download = `SIMPEN-${ent}-${today()}.csv`;
+    a.click();
+    toast(`Ekspor ${L.length} baris ${ENT_LABEL[ent] || ent} selesai (kolom rahasia dikecualikan)`);
   }
 
   // ============ SISTEM LAPORAN BKD & REKAP KUM ============
@@ -1870,6 +2061,26 @@
     }
 
     const grandTotalSks = totSksPub + totSksPen;
+    const missingProofs = [];
+    subs.forEach(s => {
+      if (!s.link_final && !s.doi) {
+        missingProofs.push(`Artikel: "${String(s.judul || '').slice(0, 48)}${String(s.judul || '').length > 48 ? '...' : ''}" (belum ada DOI / link terbit)`);
+      }
+    });
+    if (incPen) {
+      pens.forEach(p => {
+        if (!p.link_pdf && !p.link_berkas) {
+          missingProofs.push(`Riset: "${String(p.judul || '').slice(0, 48)}${String(p.judul || '').length > 48 ? '...' : ''}" (belum ada berkas PDF/Drive)`);
+        }
+      });
+    }
+    const totalChecked = subs.length + (incPen ? pens.length : 0);
+    const proofBoxHtml = totalChecked === 0 ? '' : (
+      missingProofs.length === 0
+        ? `<div class="bkd-check-ok"><b>Kelengkapan Bukti Fisik:</b> Seluruh ${totalChecked} item pada filter ini sudah dilengkapi tautan bukti/DOI untuk Asesor BKD.</div>`
+        : `<div class="bkd-check-warn"><b>Pemeriksa Bukti Fisik (${missingProofs.length} item belum lengkap):</b><ul style="margin:4px 0 0 18px;padding:0">${missingProofs.slice(0, 3).map(m => `<li>${esc(m)}</li>`).join('')}${missingProofs.length > 3 ? `<li>dan ${missingProofs.length - 3} item lainnya…</li>` : ''}</ul></div>`
+    );
+
     const box = $('#bkd-preview-stats');
     if (box) {
       box.innerHTML = `
@@ -1890,6 +2101,7 @@
         <div style="margin-top:8px;font-size:12px;line-height:1.4;color:${grandTotalSks >= 2 ? '#065F46' : '#92400E'};display:flex;align-items:center;gap:6px">
           ${grandTotalSks >= 2 ? `${SVG.check} <span><b>Memenuhi Rubrik BKD:</b> Beban kerja penelitian memenuhi batas minimal (standar: 2 s.d 4 SKS per semester).</span>` : `${SVG.alert} <span><b>Perhatian:</b> Total SKS penelitian di bawah 2 SKS. Pastikan naskah/laporan riset pada semester ini sudah dicatat.</span>`}
         </div>
+        ${proofBoxHtml}
       `;
     }
   }
@@ -1897,12 +2109,7 @@
   function openBkdModal() {
     const D = S.D; if (!D) return;
     const c = cfg();
-    const subs = D.Submission || [], pens = D.Penelitian || [];
-    const allSemesters = [...new Set([
-      ...subs.map(s => s.semester_bkd),
-      ...pens.map(p => p.semester_bkd),
-      '2025/2026 Genap', '2025/2026 Ganjil', '2024/2025 Genap', '2024/2025 Ganjil'
-    ].filter(Boolean))].sort().reverse();
+    const allSemesters = buildSemesterList();
 
     openModal(`
       <div class="ov">
@@ -2499,6 +2706,271 @@
     `);
   }
 
+  function openCiteModal(pubId) {
+    const pub = (S.P?.publikasi || []).find(x => String(x.id) === String(pubId));
+    if (!pub) return;
+    const profil = S.P?.profil || {};
+    const tahun = pub.tahun_terbit || 'n.d.';
+    const authorApa = formatAuthorApa(profil.nama);
+    const authorIeee = formatAuthorIeee(profil.nama);
+    const linkPart = pub.doi ? `https://doi.org/${pub.doi}` : (pub.link_final || '');
+
+    const apa = `${authorApa} (${tahun}). ${pub.judul}. ${pub.jurnal}.${linkPart ? ' ' + linkPart : ''}`;
+    const ieee = `${authorIeee}, "${pub.judul}," ${pub.jurnal}, ${tahun}.${pub.doi ? ' doi: ' + pub.doi + '.' : (pub.link_final ? ' [Online]. Available: ' + pub.link_final : '')}`;
+
+    openModal(`
+      <div class="ov">
+        <div class="mod" role="dialog" aria-modal="true" aria-labelledby="cite-title" style="max-width:560px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+            <div>
+              <h2 id="cite-title" style="font-size:17px">Salin Format Sitasi Artikel</h2>
+              <p class="mu" style="font-size:12.5px;margin:2px 0 0">Siap tempel ke daftar pustaka Mendeley, Zotero, atau naskah ilmiah.</p>
+            </div>
+            <button type="button" class="btn sm" data-a="mclose" aria-label="Tutup modal sitasi" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div class="copy-box-head">
+                <b style="font-size:12.5px;color:var(--pri)">Format APA (Edisi ke-7)</b>
+                <button type="button" class="btn sm" data-a="copyTarget" data-target="cite-apa-txt">${SVG.copy} Salin APA</button>
+              </div>
+              <div class="copy-box" id="cite-apa-txt">${esc(apa)}</div>
+            </div>
+            <div>
+              <div class="copy-box-head">
+                <b style="font-size:12.5px;color:var(--pri)">Format IEEE</b>
+                <button type="button" class="btn sm" data-a="copyTarget" data-target="cite-ieee-txt">${SVG.copy} Salin IEEE</button>
+              </div>
+              <div class="copy-box" id="cite-ieee-txt">${esc(ieee)}</div>
+            </div>
+          </div>
+          <div class="act">
+            <button type="button" class="btn pri" data-a="mclose">Selesai</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  function openFollowupModal(subId) {
+    const s = (S.D?.Submission || []).find(x => x.id === subId);
+    if (!s) return;
+    const c = cfg();
+    const j = jname(s.id_jurnal);
+    const tglSub = s.tgl_submit ? fmt(s.tgl_submit) : '(tanggal submit)';
+    const waitDays = s.tgl_submit ? -dayDiff(s.tgl_submit) : null;
+    const authorName = c.nama || 'Penulis';
+    const affil = c.afiliasi || '';
+
+    const idSubj = `Permohonan Informasi Status Naskah: ${s.judul}`;
+    const idBody = `Yth. Dewan Redaksi ${j},\n\nDengan hormat,\nMelalui surat elektronik ini, saya ${authorName}${affil ? ' (' + affil + ')' : ''} bermaksud menanyakan perkembangan proses penelaahan (status saat ini: ${s.status}) untuk naskah artikel kami yang berjudul:\n"${s.judul}"\n\nNaskah tersebut telah kami kirimkan pada ${tglSub}${waitDays !== null && waitDays >= 0 ? ' (' + waitDays + ' hari yang lalu)' : ''}${s.akun_ojs ? ' melalui akun OJS "' + s.akun_ojs + '"' : ''}.\n\nBesar harapan kami memperoleh kabar pembaruan terkait kelanjutan naskah tersebut. Atas perhatian dan kerja sama Bapak/Ibu Editor, kami ucapkan terima kasih.\n\nHormat kami,\n${authorName}${affil ? '\n' + affil : ''}`;
+
+    const enSubj = `Manuscript Status Inquiry: ${s.judul}`;
+    const enBody = `Dear Editorial Office of ${j},\n\nI hope this email finds you well.\nI am writing to politely inquire about the current editorial status of our manuscript titled:\n"${s.judul}"\n\nThe manuscript was submitted on ${tglSub}${waitDays !== null && waitDays >= 0 ? ' (' + waitDays + ' days ago)' : ''}${s.akun_ojs ? ' under OJS username "' + s.akun_ojs + '"' : ''}, and is currently listed as "${s.status}".\n\nWe would greatly appreciate any update regarding the review progress. Thank you very much for your time and consideration.\n\nBest regards,\n${authorName}${affil ? '\n' + affil : ''}`;
+
+    openModal(`
+      <div class="ov">
+        <div class="mod" role="dialog" aria-modal="true" aria-labelledby="fu-title" style="max-width:640px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+            <div>
+              <h2 id="fu-title" style="font-size:17px">Template Email Follow-up ke Editor Jurnal</h2>
+              <p class="mu" style="font-size:12.5px;margin:2px 0 0">Siap kirim ke editor ${esc(j)}.</p>
+            </div>
+            <button type="button" class="btn sm" data-a="mclose" aria-label="Tutup template email" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div class="copy-box-head">
+                <b style="font-size:12.5px;color:var(--pri)">Bahasa Indonesia</b>
+                <div style="display:flex;gap:6px">
+                  <button type="button" class="btn sm" data-a="copyText" data-text="${esc(idSubj)}">${SVG.copy} Salin Subjek</button>
+                  <button type="button" class="btn pri sm" data-a="copyTarget" data-target="fu-id-body">${SVG.copy} Salin Isi Email</button>
+                </div>
+              </div>
+              <div class="copy-box" id="fu-id-body">${esc(idBody)}</div>
+            </div>
+            <div>
+              <div class="copy-box-head">
+                <b style="font-size:12.5px;color:var(--pri)">English (International Journal)</b>
+                <div style="display:flex;gap:6px">
+                  <button type="button" class="btn sm" data-a="copyText" data-text="${esc(enSubj)}">${SVG.copy} Copy Subject</button>
+                  <button type="button" class="btn pri sm" data-a="copyTarget" data-target="fu-en-body">${SVG.copy} Copy Body</button>
+                </div>
+              </div>
+              <div class="copy-box" id="fu-en-body">${esc(enBody)}</div>
+            </div>
+          </div>
+          <div class="act">
+            <button type="button" class="btn" data-a="mclose">Tutup</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  let _bibParsed = [];
+  function renderBibPreview() {
+    const wrap = $('#bib-preview-wrap');
+    const btn = $('#btn-bib-import');
+    if (!wrap) return;
+    if (!_bibParsed.length) {
+      wrap.innerHTML = '<div class="mu" style="padding:16px;text-align:center;font-size:12.5px">Unggah file <code>.bib</code> atau tempel isi BibTeX di atas untuk melihat pratinjau.</div>';
+      if (btn) btn.disabled = true;
+      return;
+    }
+    const existingJurs = S.D?.Jurnal || [];
+    wrap.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12.5px">
+        <b>Ditemukan ${_bibParsed.length} entri BibTeX:</b>
+        <span class="mu">Centang entri yang ingin diimpor</span>
+      </div>
+      <div class="bib-list">
+        ${_bibParsed.map((e, idx) => {
+          const dup = findSimilarSubmission(e.title, '');
+          const jMatch = existingJurs.find(j => isSameJournalName(j.nama, e.journal));
+          return `
+            <label class="bib-item" style="margin:0;cursor:pointer;font-weight:400">
+              <input type="checkbox" class="bib-chk" data-idx="${idx}" ${dup ? '' : 'checked'} style="margin-top:2px">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;color:var(--tx)">${esc(e.title)}</div>
+                <div class="mu" style="font-size:11.5px;margin-top:2px">
+                  ${e.journal ? `<span>${esc(e.journal)}</span>` : '<span>Tanpa nama jurnal</span>'}
+                  ${e.year ? ` · <span>${esc(e.year)}</span>` : ''}
+                  ${e.doi ? ` · <span class="mono">DOI: ${esc(e.doi)}</span>` : ''}
+                </div>
+                <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+                  ${dup ? '<span class="bd am">Judul serupa sudah ada</span>' : '<span class="bd gr">Siap diimpor</span>'}
+                  ${jMatch ? `<span class="bd bl">Cocok jurnal: ${esc(jMatch.nama)}</span>` : (e.journal ? '<span class="bd sl">Jurnal baru akan dicatat</span>' : '')}
+                </div>
+              </div>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    `;
+    if (btn) btn.disabled = false;
+  }
+
+  function openBibtexModal() {
+    _bibParsed = [];
+    const semOpts = getSemOptions().map(([a, b]) => `<option value="${esc(a)}">${esc(b)}</option>`).join('');
+    openModal(`
+      <div class="ov">
+        <div class="mod" role="dialog" aria-modal="true" aria-labelledby="bib-title" style="max-width:660px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <div>
+              <h2 id="bib-title" style="font-size:17px">Impor Massal Artikel dari BibTeX (.bib)</h2>
+              <p class="mu" style="font-size:12.5px;margin:2px 0 0">Ekspor file <code>.bib</code> dari Google Scholar, Mendeley, atau Zotero lalu unggah atau tempel di sini.</p>
+            </div>
+            <button type="button" class="btn sm" data-a="mclose" aria-label="Tutup modal impor BibTeX" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label for="bib_status" style="margin-top:0">Status Awal Artikel Impor</label>
+              <select id="bib_status" class="in">
+                <option value="Published">Published (Sudah Terbit)</option>
+                <option value="Draft">Draft (Rencana/Arsip)</option>
+              </select>
+            </div>
+            <div>
+              <label for="bib_sem" style="margin-top:0">Semester BKD (Opsional)</label>
+              <select id="bib_sem" class="in">${semOpts}</select>
+            </div>
+          </div>
+          <label for="bib_file" style="margin-top:4px">Pilih File .bib (Opsional)</label>
+          <input type="file" id="bib_file" accept=".bib,.txt" class="in" style="padding:7px 10px">
+          <label for="bib_raw">Atau Tempel Teks BibTeX</label>
+          <textarea id="bib_raw" placeholder="@article{key2025,\n  title={Judul Artikel Ilmiah},\n  journal={Nama Jurnal},\n  year={2025},\n  doi={10.xxxx/xxxxx}\n}" style="min-height:110px;font-family:'JetBrains Mono',monospace;font-size:12px"></textarea>
+          <div id="bib-preview-wrap" style="margin-top:12px"></div>
+          <div class="act">
+            <button type="button" class="btn" data-a="mclose">Batal</button>
+            <button type="button" class="btn pri" id="btn-bib-import" data-a="doBibImport" disabled>${SVG.upload} Impor Artikel Terpilih</button>
+          </div>
+        </div>
+      </div>
+    `);
+    renderBibPreview();
+  }
+
+  async function runBibtexImport() {
+    const chks = [...document.querySelectorAll('.bib-chk:checked')];
+    if (!chks.length) return toast('Pilih minimal satu entri BibTeX untuk diimpor', true);
+    const defaultStatus = $('#bib_status')?.value || 'Published';
+    const defaultSem = $('#bib_sem')?.value || '';
+    const selected = chks.map(c => _bibParsed[Number(c.dataset.idx)]).filter(Boolean);
+
+    const btn = $('#btn-bib-import');
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengimpor…'; }
+
+    const existingJurs = S.D.Jurnal = S.D.Jurnal || [];
+    const newJurs = [];
+    const resolveJournalId = jTitle => {
+      if (!jTitle) return '';
+      const found = [...existingJurs, ...newJurs].find(j => isSameJournalName(j.nama, jTitle));
+      if (found) return found.id;
+      const nj = {
+        id: uid(),
+        nama: jTitle,
+        link: '',
+        thumbnail: '',
+        penerbit: '',
+        jenis_kampus: 'PTN',
+        rumpun_ilmu: '',
+        akreditasi: 'Non-Sinta',
+        tipe_biaya: 'Gratis',
+        apc: '',
+        scope: '',
+        catatan: 'Ditambahkan otomatis dari impor BibTeX',
+        tampil_publik: false
+      };
+      newJurs.push(nj);
+      return nj.id;
+    };
+
+    const newSubs = selected.map(e => ({
+      id: uid(),
+      id_penelitian: '',
+      judul: e.title,
+      id_jurnal: resolveJournalId(e.journal),
+      status: defaultStatus,
+      tgl_submit: '',
+      tgl_cek: today(),
+      deadline_respon: '',
+      link_feedback: '',
+      link_final: e.url || '',
+      doi: e.doi || '',
+      tahun_terbit: e.year || (defaultStatus === 'Published' ? String(new Date().getFullYear()) : ''),
+      catatan: 'Diimpor dari BibTeX',
+      tampil_publik: true,
+      akun_ojs: '',
+      password_ojs: '',
+      semester_bkd: defaultSem,
+      peran_penulis: 'Penulis Pertama & Korespondensi',
+      total_penulis: 1,
+      sks_bkd: ''
+    }));
+
+    if (newJurs.length) existingJurs.push(...newJurs);
+    S.D.Submission = (S.D.Submission || []).concat(newSubs);
+    Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+    closeModal();
+    draw();
+
+    // Sinkronkan ke server: gunakan batchUpsert jika tersedia, fallback ke upsert berurutan
+    if (newJurs.length) {
+      const rj = await API.post('batchUpsert', { entity: 'Jurnal', records: newJurs });
+      if (!rj.success && /tidak dikenal/i.test(rj.message || '')) {
+        for (const nj of newJurs) await API.post('upsert', { entity: 'Jurnal', record: nj });
+      }
+    }
+    const rs = await API.post('batchUpsert', { entity: 'Submission', records: newSubs });
+    if (!rs.success && /tidak dikenal/i.test(rs.message || '')) {
+      for (const ns of newSubs) await API.post('upsert', { entity: 'Submission', record: ns });
+    }
+    Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+    toast(`Berhasil mengimpor ${newSubs.length} artikel dari BibTeX`);
+  }
+
   document.addEventListener('click', async e => {
     if (e.target && e.target.classList && e.target.classList.contains('ov')) {
       closeModal();
@@ -2538,8 +3010,20 @@
       const j = (S.P?.jurnal || S.D?.Jurnal || []).find(x => String(x.id) === String(id) || x.nama === id);
       if (j) openJournalDetail(j);
     }
-    else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', tgl_cek: today(), tampil_publik: true } : { tampil_publik: true });
+    else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', semester_bkd: currentSemester(), tgl_cek: today(), tampil_publik: true } : { tampil_publik: true });
     else if (a === 'edit') openForm(ent, S.D[ent].find(x => x.id === id));
+    else if (a === 'cite') openCiteModal(id);
+    else if (a === 'followup') openFollowupModal(id);
+    else if (a === 'importBib') openBibtexModal();
+    else if (a === 'doBibImport') runBibtexImport();
+    else if (a === 'copyTarget') {
+      const el = $('#' + t.dataset.target);
+      if (el) navigator.clipboard.writeText(el.textContent || '').then(() => toast('Teks berhasil disalin')).catch(() => toast('Gagal menyalin', true));
+    }
+    else if (a === 'copyText') {
+      const txt = t.dataset.text || '';
+      if (txt) navigator.clipboard.writeText(txt).then(() => toast('Teks berhasil disalin')).catch(() => toast('Gagal menyalin', true));
+    }
     else if (a === 'del') {
       const list = S.D?.[ent] || [];
       const item = list.find(x => x.id === id);
@@ -2570,8 +3054,22 @@
     else if (a === 'doConfirmDelOld') {
       closeModal();
       const o = S.D.CFP.filter(c => dayDiff(c.deadline) < 0);
-      for (const c of o) await remove('CFP', c.id);
-      toast('CFP kedaluwarsa berhasil dibersihkan');
+      const ids = o.map(c => c.id);
+      if (!ids.length) return;
+      const prev = S.D.CFP.slice();
+      S.D.CFP = S.D.CFP.filter(c => !ids.includes(c.id));
+      Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+      draw();
+      const r = await API.post('batchDelete', { entity: 'CFP', ids });
+      if (!r.success && /tidak dikenal/i.test(r.message || '')) {
+        for (const cid of ids) await API.post('delete', { entity: 'CFP', id: cid });
+      } else if (!r.success) {
+        S.D.CFP = prev;
+        Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
+        draw();
+        return toast(r.message || 'Gagal membersihkan CFP', true);
+      }
+      toast(`${ids.length} CFP kedaluwarsa berhasil dibersihkan`);
     }
     else if (a === 'cek') { const s = S.D.Submission.find(x => x.id === id); upsert('Submission', { ...s, tgl_cek: today() }); toast('Ditandai sudah dicek'); }
     else if (a === 'pen2sub') {
@@ -2685,8 +3183,19 @@
     const t = e.target;
     if (t.dataset && t.dataset.a === 'chg') {
       const s = S.D.Submission.find(x => x.id === t.dataset.id);
-      upsert('Submission', { ...s, status: t.value, tgl_cek: today() });
+      const updated = applyStatusAutoFields({ ...s, status: t.value, tgl_cek: today() }, s.status);
+      upsert('Submission', updated);
       toast('Status naskah diubah: ' + t.value);
+    }
+    else if (t.id === 'bib_file' && t.files && t.files[0]) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const rawEl = $('#bib_raw');
+        if (rawEl) rawEl.value = String(ev.target.result || '');
+        _bibParsed = parseBibtex(ev.target.result || '');
+        renderBibPreview();
+      };
+      reader.readAsText(t.files[0]);
     }
     else if (t.id && t.id.startsWith('f_')) { S.f[t.id.slice(2)] = t.value; S.pubJurPage = 1; draw(); }
     else if (t.id === 'yr') { S.yr = t.value; draw(); }
@@ -2720,8 +3229,13 @@
         }
         draw();
       }, 200);
+    } else if (t.id === 'bib_raw') {
+      _bibParsed = parseBibtex(t.value);
+      renderBibPreview();
     } else if (t.name === 'nama' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Jurnal') {
       checkJournalDuplicateLive(t);
+    } else if (t.name === 'judul' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Submission') {
+      checkSubmissionDuplicateLive(t);
     } else if (t.form && t.form.id === 'mf' && t.form.dataset.e === 'Submission' && ['id_jurnal', 'peran_penulis', 'total_penulis'].includes(t.name)) {
       updateSubmissionKumInForm();
     }
@@ -2773,6 +3287,9 @@
         }
         if (rec.tipe_biaya === 'Gratis') rec.apc = '';
       }
+      if (ent === 'Submission') {
+        Object.assign(rec, applyStatusAutoFields(rec, old?.status));
+      }
       closeModal(); await upsert(ent, rec); toast('Data berhasil disimpan');
     }
     else if (f.id === 'sf') {
@@ -2786,6 +3303,8 @@
       o.notif_cek = f.elements.notif_cek ? f.elements.notif_cek.checked : false;
       o.notif_accepted = f.elements.notif_accepted ? f.elements.notif_accepted.checked : false;
       o.notif_status = f.elements.notif_status ? f.elements.notif_status.checked : false;
+      o.notif_mingguan = f.elements.notif_mingguan ? f.elements.notif_mingguan.checked : false;
+      o.app_url = location.href.split('#')[0];
 
       // Normalisasi nomor telepon ke standar 628...
       if (o.wa) {
