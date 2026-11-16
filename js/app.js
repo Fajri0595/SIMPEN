@@ -977,7 +977,6 @@
         <h1>Masuk Panel Admin</h1>
         <p class="mu" style="margin-bottom:14px">Sistem Manajemen Penelitian Dosen (SIMPEN)</p>
         <span class="bd bl" style="font-size:12px;padding:4px 12px">Akses khusus pengelola data &amp; publikasi</span>
-        ${API.demo ? '<div class="card" style="margin:16px 0;padding:10px;background:#F8FAFC;border:1px dashed #CBD5E1;font-size:12.5px">Mode demo aktif - kata sandi: <b>admin</b></div>' : ''}
         <form id="lf" style="text-align:left;margin-top:20px">
           <label for="pw">Kata Sandi Admin <span style="color:#DC2626">*</span></label>
           <input class="in" id="pw" type="password" placeholder="Masukkan kata sandi pengelola…" autocomplete="current-password" required>

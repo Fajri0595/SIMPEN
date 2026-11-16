@@ -6,20 +6,16 @@
   --surface-hover: #F8FAFC;
   --bd: #E2E8F0;
   --bd-hover: #CBD5E1;
-  --bd-focus: #3B82F6;
   
   --tx: #0F172A;
   --tx-sec: #334155;
   --mu: #475569;
-  --mu-light: #64748B;
   
   --pri: #1E3A8A;
-  --pri-h: #172554;
   --pri-light: #EFF6FF;
   --pri-tx: #1D4ED8;
   
   --accent: #2563EB;
-  --accent-soft: #DBEAFE;
   
   /* Status Colors */
   --suc-bg: #ECFDF5; --suc-tx: #065F46; --suc-bd: #A7F3D0;
@@ -71,10 +67,8 @@ h1, h2, h3, h4, h5, h6 {
 h1 { font-size: 26px; }
 h2 { font-size: 20px; }
 h3 { font-size: 16px; font-weight: 600; }
-.serif { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
 
 .mu { color: var(--mu); }
-.mu-light { color: var(--mu-light); }
 .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 
 /* Focus & Interaction Affordances (R-32, R-39) */
@@ -158,15 +152,6 @@ button, input, select, textarea {
 .btn.dng:hover {
   background: var(--dng-bg);
   border-color: var(--dng-tx);
-}
-
-.btn.ghost {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-.btn.ghost:hover {
-  background: var(--surface-alt);
 }
 
 a.btn {
@@ -1695,18 +1680,6 @@ tr:hover td {
    UI/UX PRO MAX & GAS INSTANT UX ENHANCEMENTS
    ============================================================ */
 
-/* Skeleton Loader Animation */
-@keyframes pulseSkeleton {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .4; }
-}
-.skeleton-box {
-  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
-  background-size: 200% 100%;
-  animation: pulseSkeleton 1.6s ease-in-out infinite;
-  border-radius: var(--r-sm);
-}
-
 /* Switch Toggle UI (Matriks Notifikasi WA) */
 .toggle-item {
   display: flex;
@@ -1817,14 +1790,6 @@ tr:hover td {
   border-radius: var(--r-full);
   font-weight: 700;
   font-size: 13.5px;
-}
-.verify-stamp-box {
-  border: 2px dashed #3B82F6;
-  background: #EFF6FF;
-  border-radius: var(--r-lg);
-  padding: 18px;
-  text-align: center;
-  margin: 16px 0;
 }
 .verify-code-pill {
   display: inline-block;

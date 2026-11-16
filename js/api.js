@@ -2,10 +2,6 @@
 (() => {
   const C = window.SIMPEN_CONFIG;
 
-  try {
-    localStorage.removeItem('sp_demo');
-  } catch (_) {}
-
   // Monitor latensi klien vs server
   window.Perf = {
     rows: [],
@@ -23,7 +19,6 @@
   };
 
   window.API = {
-    demo: false,
     tok: () => localStorage.getItem('sp_tok'),
     setTok: t => t ? localStorage.setItem('sp_tok', t) : localStorage.removeItem('sp_tok'),
     async get(action, params = {}) {
