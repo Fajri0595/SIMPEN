@@ -1,10 +1,7 @@
-# Backend Apps Script & Clasp config (jangan di-push ke publik)
+# Backend Apps Script (jangan di-push ke publik)
 backend/
 Kode.js
 appsscript.json
-.clasp.json
-.claspignore
-.clasprc.json
 
 # Dokumen audit & arah desain internal (tidak perlu di-deploy ke GitHub Pages)
 anti-slop/
