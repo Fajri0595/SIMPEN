@@ -7,6 +7,50 @@
   const today = () => new Date().toISOString().slice(0, 10);
   const dayDiff = d => d ? Math.ceil((new Date(d + 'T00:00:00') - new Date(today() + 'T00:00:00')) / 864e5) : null;
   const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+  const nowLogWaktu = () => {
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  const fmtLogWaktu = (raw, list) => {
+    const s = String(raw || '').trim();
+    if (!s) return '-';
+    const pad = v => String(v).padStart(2, '0');
+    let fallbackTime = '';
+    if (Array.isArray(list)) {
+      for (let i = 0; i < list.length; i++) {
+        const tm = String(list[i]?.waktu || '').match(/(?:[,\sT]+)(\d{1,2})[:.](\d{2})/);
+        if (tm) { fallbackTime = `${pad(tm[1])}:${tm[2]}`; break; }
+      }
+    }
+    if (!fallbackTime) fallbackTime = (S.D?.Pengaturan?.[0]?.jam) || '08:00';
+
+    const mSlash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\sT]+(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?)?$/);
+    if (mSlash) {
+      const dd = pad(mSlash[1]), mm = pad(mSlash[2]), yyyy = mSlash[3];
+      const hm = (mSlash[4] !== undefined && mSlash[5] !== undefined) ? `${pad(mSlash[4])}:${mSlash[5]}` : fallbackTime;
+      return `${dd}/${mm}/${yyyy} ${hm}`;
+    }
+
+    const mDash = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[,\sT]+(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?)?/);
+    if (mDash) {
+      const yyyy = mDash[1], a = Number(mDash[2]), b = Number(mDash[3]);
+      const hasExplicitTime = mDash[4] !== undefined && mDash[5] !== undefined;
+      const hm = hasExplicitTime ? `${pad(mDash[4])}:${mDash[5]}` : fallbackTime;
+      let dd, mm;
+      if (a > 12) {
+        dd = pad(a); mm = pad(b);
+      } else if (b > 12) {
+        dd = pad(b); mm = pad(a);
+      } else if (!hasExplicitTime) {
+        dd = pad(a); mm = pad(b);
+      } else {
+        dd = pad(b); mm = pad(a);
+      }
+      return `${dd}/${mm}/${yyyy} ${hm}`;
+    }
+
+    return s;
+  };
   
   const STAT = ['Draft', 'Submitted', 'Under Review', 'Revision Requested', 'Resubmitted', 'Accepted', 'Published', 'Rejected', 'Withdrawn'];
   const STC = { Draft: 'sl', Submitted: 'bl', 'Under Review': 'bl', 'Revision Requested': 'am', Resubmitted: 'am', Accepted: 'gr', Published: 'gr', Rejected: 'rs', Withdrawn: 'rs' };
@@ -902,7 +946,7 @@
     const waStatusTxt = !waActive
       ? 'Pengingat WhatsApp belum aktif (nomor tujuan belum diisi atau saklar master dimatikan di Pengaturan).'
       : (log
-          ? `Notifikasi WA terakhir (${esc(log.waktu)}): <b>${esc(log.hasil)}</b> · Jadwal harian pukul ${esc(c.jam || '08:00')} WIB.`
+          ? `Notifikasi WA terakhir (${esc(fmtLogWaktu(log.waktu, D.Log))}): <b>${esc(log.hasil)}</b> · Jadwal harian pukul ${esc(c.jam || '08:00')} WIB.`
           : `Pengingat WhatsApp siap dikirim ke <b>${esc(c.wa)}</b> sesuai jadwal harian (${esc(c.jam || '08:00')} WIB). Belum ada riwayat pengiriman.`);
 
     return head('Dashboard Ringkasan', 'Kondisi riil proyek riset, progres artikel jurnal, dan target deadline naskah', `
@@ -1572,7 +1616,7 @@
           <div style="display:flex;flex-direction:column;gap:10px">
             ${(D.Log || []).slice(0, 10).map(l => `
               <div class="row" style="margin:0">
-                <span class="mono" style="font-size:11.5px">${esc(l.waktu)}</span>
+                <span class="mono" style="font-size:11.5px">${esc(fmtLogWaktu(l.waktu, D.Log))}</span>
                 <span style="font-weight:600">${esc(l.jenis)}</span>
                 <span class="bd ${/berhasil/i.test(l.hasil) ? 'gr' : 'rs'}">${esc(l.hasil)}</span>
               </div>
@@ -1756,7 +1800,7 @@
     const L = S.D[ent] = S.D[ent] || [], i = L.findIndex(x => x.id === rec.id), old = i < 0 ? null : L[i];
     i < 0 ? L.push(rec) : (L[i] = rec);
     if (ent === 'Submission' && old && old.status !== rec.status) {
-      (S.D.StatusLog = S.D.StatusLog || []).unshift({ id_submission: rec.id, status_lama: old.status, status_baru: rec.status, waktu: new Date().toLocaleString('id-ID') });
+      (S.D.StatusLog = S.D.StatusLog || []).unshift({ id_submission: rec.id, status_lama: old.status, status_baru: rec.status, waktu: nowLogWaktu() });
     }
     // Optimistic persistence ke local cache (gas-instant-ux-pro)
     Store.set('boot', { h: hashData(S.D), t: Date.now(), data: S.D });
@@ -2584,7 +2628,7 @@
             ${h.map(x => `
               <div class="row">
                 <span>${badge(x.status_lama)} → ${badge(x.status_baru)}</span>
-                <span class="mono">${esc(x.waktu)}</span>
+                <span class="mono">${esc(fmtLogWaktu(x.waktu, S.D.StatusLog))}</span>
               </div>
             `).join('') || '<p class="mu" style="text-align:center;padding:24px">Belum ada riwayat perubahan status.</p>'}
             <div class="act">
