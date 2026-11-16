@@ -5,3 +5,7 @@ appsscript.json
 .clasp.json
 .claspignore
 .clasprc.json
+
+# Dokumen audit & arah desain internal (tidak perlu di-deploy ke GitHub Pages)
+anti-slop/
+DESIGN.md

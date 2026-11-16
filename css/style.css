@@ -1,4 +1,4 @@
-/* SIMPEN Design System — Modern Academic SaaS (Plus Jakarta Sans + Slate/Indigo Palette) */
+/* SIMPEN Design System - Modern Academic SaaS (Plus Jakarta Sans + Slate/Indigo Palette) */
 :root {
   --bg: #F8FAFC;
   --surface: #FFFFFF;
@@ -77,10 +77,19 @@ h3 { font-size: 16px; font-weight: 600; }
 .mu-light { color: var(--mu-light); }
 .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 
-/* Focus */
+/* Focus & Interaction Affordances (R-32, R-39) */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+a[href], button, summary, select, label[for], input[type="checkbox"], input[type="radio"], [role="button"], [role="tab"], [role="switch"] {
+  cursor: pointer;
+}
+
+button:disabled, .btn:disabled, input:disabled, select:disabled, textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 /* Buttons */
@@ -184,7 +193,8 @@ a.btn {
 .in:focus, select:focus, textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 textarea {
@@ -326,16 +336,6 @@ label {
   gap: 24px;
   position: relative;
   overflow: hidden;
-}
-.hero-academic::after {
-  content: '';
-  position: absolute;
-  right: -60px;
-  top: -60px;
-  width: 260px;
-  height: 260px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
-  pointer-events: none;
 }
 .hero-profile {
   display: flex;
@@ -895,11 +895,12 @@ tr:hover td {
   box-shadow: var(--sh-xs);
   min-height: 250px;
   cursor: pointer;
-  outline: none;
 }
 .jc:focus-visible {
   border-color: var(--pri);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .jc:hover {
   border-color: var(--bd-hover);
@@ -1031,7 +1032,7 @@ tr:hover td {
   background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
   color: #FFF;
   border-radius: var(--r-sm);
-  border-left: 3px solid #3B82F6;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.25);
   user-select: none;
 }
@@ -1181,7 +1182,8 @@ tr:hover td {
 .pag-perpage-select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .pag-nav {
@@ -1232,7 +1234,6 @@ tr:hover td {
 .pag-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  pointer-events: none;
   background: var(--surface-alt);
   border-color: var(--bd);
 }
@@ -1386,12 +1387,18 @@ tr:hover td {
     justify-content: center;
     width: 100%;
   }
+  .btn, .btn.sm, .pag-btn, .pag-perpage-select, .in, select, .tabs button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .tabs {
+    flex-wrap: wrap;
+    width: 100%;
+  }
   .pag-btn {
-    min-width: 32px;
-    height: 32px;
-    min-height: 32px;
-    padding: 0 8px;
-    font-size: 12px;
+    height: 44px;
+    padding: 0 10px;
+    font-size: 12.5px;
   }
 }
 
@@ -1477,6 +1484,11 @@ tr:hover td {
 .toggle-switch input:checked + .toggle-slider:before {
   transform: translateX(20px);
 }
+.toggle-switch input:focus-visible + .toggle-slider {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
 
 /* Critical Deadline Pulse Alert */
 @keyframes critPulse {
@@ -1484,7 +1496,7 @@ tr:hover td {
   50% { border-color: #DC2626; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
 }
 .deadline-crit {
-  animation: critPulse 2s infinite ease-in-out;
+  animation: critPulse 1.5s ease-in-out 3;
   border: 1.5px solid #EF4444 !important;
   background: #FEF2F2 !important;
   color: #991B1B !important;
@@ -1556,5 +1568,15 @@ tr:hover td {
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
+}
+
+/* Reduced Motion Accessibility (R-39) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

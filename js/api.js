@@ -1,4 +1,4 @@
-// SIMPEN — Lapisan API & Client Latency Monitor (gas-instant-ux-pro)
+// SIMPEN: Lapisan API & Client Latency Monitor (gas-instant-ux-pro)
 (() => {
   const C = window.SIMPEN_CONFIG;
 
@@ -13,8 +13,8 @@
       this.rows.push({
         action,
         total: Math.round(totalMs) + 'ms',
-        server: serverMs ? Math.round(serverMs) + 'ms' : '—',
-        network: serverMs ? Math.round(Math.max(0, totalMs - serverMs)) + 'ms' : '—',
+        server: serverMs ? Math.round(serverMs) + 'ms' : '-',
+        network: serverMs ? Math.round(Math.max(0, totalMs - serverMs)) + 'ms' : '-',
         time: new Date().toLocaleTimeString('id-ID')
       });
       if (this.rows.length > 50) this.rows.shift();
