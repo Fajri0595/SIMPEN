@@ -2972,7 +2972,8 @@
 
   document.addEventListener('click', async e => {
     if (e.target && e.target.classList && e.target.classList.contains('ov')) {
-      closeModal();
+      // Jangan tutup modal form input jika pengguna tidak sengaja mengklik area luar
+      if (!e.target.querySelector('form, #bib_raw')) closeModal();
       return;
     }
     const t = e.target.closest('[data-a]'); if (!t || t.tagName === 'SELECT') return;
