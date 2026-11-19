@@ -1,5 +1,5 @@
-// SIMPEN Service Worker: Stale-While-Revalidate untuk App Shell PWA
-const CACHE_NAME = 'simpen-shell-v1';
+// SIMPEN Service Worker: Network-First untuk App Shell PWA agar pembaruan GitHub Pages langsung terlihat
+const CACHE_NAME = 'simpen-shell-v3';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -34,16 +34,12 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(req).then(cached => {
-      const networkFetch = fetch(req).then(res => {
-        if (res && res.ok && res.type === 'basic') {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
-        }
-        return res;
-      }).catch(() => cached);
-
-      return cached || networkFetch;
-    })
+    fetch(req).then(res => {
+      if (res && res.ok && res.type === 'basic') {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+      }
+      return res;
+    }).catch(() => caches.match(req))
   );
 });

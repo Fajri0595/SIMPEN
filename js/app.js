@@ -554,6 +554,14 @@
     }
     return u;
   };
+  const toPreviewEmbedUrl = url => {
+    const u = String(url || '').trim();
+    if (!u || /\/drive\/(?:u\/\d+\/)?folders\//i.test(u)) return '';
+    const m = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || u.match(/\/d\/([a-zA-Z0-9_-]+)/) || u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m && m[1]) return `https://drive.google.com/file/d/${m[1]}/preview`;
+    if (/\.pdf(\?.*)?$/i.test(u)) return u;
+    return '';
+  };
 
   const thumb = (j, w, h) => {
     const ini = esc((j.nama || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 3).join('').toUpperCase() || 'JUR');
@@ -772,6 +780,7 @@
           </div>
           ${(x.link_pdf || x.link_berkas) ? `
             <div class="pub-row-act">
+              ${toPreviewEmbedUrl(x.link_pdf || x.link_berkas) ? `<button type="button" class="btn pri sm" data-a="previewDoc" data-url="${esc(x.link_pdf || x.link_berkas)}" data-folder="${esc(x.link_berkas || '')}" data-title="${esc(x.judul)}">${SVG.eye} Live View</button>` : ''}
               ${x.link_pdf ? `<a class="btn sm" href="${esc(x.link_pdf)}" target="_blank" rel="noopener">${SVG.file} Naskah PDF</a>` : ''}
               ${x.link_berkas ? `<a class="btn sm" href="${esc(x.link_berkas)}" target="_blank" rel="noopener">${SVG.folder} Berkas Drive</a>` : ''}
             </div>
@@ -1387,6 +1396,7 @@
                 <td>
                   <div class="row-actions">
                     <button type="button" class="btn pri sm" data-a="pen2sub" data-id="${p.id}" title="Buat artikel jurnal dari proyek riset ini">${SVG.plus} Buat Artikel</button>
+                    ${toPreviewEmbedUrl(p.link_pdf || p.link_berkas) ? `<button type="button" class="btn sm" data-a="previewDoc" data-url="${esc(p.link_pdf || p.link_berkas)}" data-folder="${esc(p.link_berkas || '')}" data-title="${esc(p.judul)}" title="Lihat dokumen laporan langsung (Live View)">${SVG.eye} Live View</button>` : ''}
                     ${p.link_berkas ? `<a class="btn sm" href="${esc(p.link_berkas)}" target="_blank" rel="noopener">${SVG.folder} Drive</a>` : ''}
                     <button type="button" class="btn sm" data-a="edit" data-e="Penelitian" data-id="${p.id}">${SVG.edit} Ubah</button>
                     <button type="button" class="btn sm dng" data-a="del" data-e="Penelitian" data-id="${p.id}" aria-label="Hapus proyek riset ${esc(p.judul)}" title="Hapus proyek riset">${SVG.trash}</button>
@@ -2071,6 +2081,117 @@
     }
   }
 
+  function updatePenelitianDrivePreview() {
+    const f = $('#mf');
+    if (!f || f.dataset.e !== 'Penelitian') return;
+    const box = $('#pen-inline-preview');
+    if (!box) return;
+    const pdfUrl = f.querySelector('[name=link_pdf]')?.value || '';
+    const folderUrl = f.querySelector('[name=link_berkas]')?.value || '';
+    const judul = f.querySelector('[name=judul]')?.value || 'Dokumen Riset';
+    const embedUrl = toPreviewEmbedUrl(pdfUrl);
+    if (!embedUrl) {
+      box.innerHTML = '';
+      return;
+    }
+    box.innerHTML = `
+      <div class="live-pdf-wrap">
+        <div class="live-pdf-head">
+          <span style="font-weight:700;display:inline-flex;align-items:center;gap:6px">${SVG.eye} <span>Live View Dokumen Laporan</span></span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn sm" data-a="previewDoc" data-url="${esc(pdfUrl)}" data-folder="${esc(folderUrl)}" data-title="${esc(judul)}" style="min-height:26px;padding:2px 8px;font-size:11px;background:#FFF">${SVG.ext} Layar Penuh</button>
+            <a class="btn sm" href="${esc(pdfUrl)}" target="_blank" rel="noopener" style="min-height:26px;padding:2px 8px;font-size:11px;background:#FFF">${SVG.file} Buka di Drive</a>
+          </div>
+        </div>
+        <iframe class="live-pdf-frame" src="${esc(embedUrl)}" title="Live View ${esc(judul)}" loading="lazy"></iframe>
+      </div>
+    `;
+  }
+
+  function uploadPenelitianFileToDrive(file) {
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      return toast('Ukuran berkas maksimal 15 MB untuk unggahan langsung ke Google Drive.', true);
+    }
+    const btn = $('#btn-drive-upload');
+    const st = $('#drive-upload-status');
+    const judulEl = $('#mf [name=judul]');
+    const folderEl = $('#mf [name=link_berkas]');
+    const pdfEl = $('#mf [name=link_pdf]');
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengunggah…'; }
+    if (st) st.textContent = `Mengunggah "${file.name}" ke Google Drive SIMPEN…`;
+
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      try {
+        const dataUrl = String(ev.target?.result || '');
+        const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
+        if (!base64) throw new Error('Berkas kosong atau gagal dibaca.');
+        const r = await API.post('uploadDrive', {
+          fileName: file.name,
+          mimeType: file.type || 'application/pdf',
+          base64,
+          judul: judulEl?.value || 'Proyek Riset',
+          existingFolderUrl: folderEl?.value || ''
+        });
+        if (!r || !r.success) {
+          const msg = /action tidak dikenal/i.test(r?.message || '')
+            ? 'Endpoint uploadDrive belum aktif di backend Google Apps Script. Salin backend/Kode.js terbaru lalu Deploy ulang versi Web App.'
+            : (r?.message || 'Gagal mengunggah berkas ke Google Drive.');
+          if (st) st.textContent = msg;
+          return toast(msg, true);
+        }
+        if (pdfEl && r.fileUrl) pdfEl.value = r.fileUrl;
+        if (folderEl && r.folderUrl && !folderEl.value) folderEl.value = r.folderUrl;
+        if (st) st.textContent = `Berhasil disimpan ke Google Drive (${r.fileName}). Klik "Simpan Proyek Riset" untuk menyimpan tautan.`;
+        updatePenelitianDrivePreview();
+        toast('Berkas berhasil diunggah ke Drive & siap Live View');
+      } catch (err) {
+        const msg = err?.message || 'Gagal memproses berkas.';
+        if (st) st.textContent = msg;
+        toast(msg, true);
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = `${SVG.upload} Upload Berkas ke Drive`; }
+      }
+    };
+    reader.onerror = () => {
+      if (btn) { btn.disabled = false; btn.innerHTML = `${SVG.upload} Upload Berkas ke Drive`; }
+      if (st) st.textContent = 'Gagal membaca berkas lokal.';
+      toast('Gagal membaca berkas lokal.', true);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function openDocPreviewModal(url, title, folderUrl) {
+    const embedUrl = toPreviewEmbedUrl(url);
+    if (!embedUrl) {
+      if (url && /^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+      return;
+    }
+    openModal(`
+      <div class="ov">
+        <div class="mod" role="dialog" aria-modal="true" aria-labelledby="doc-preview-title" style="max-width:860px;padding:20px 24px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px">
+            <div style="min-width:0">
+              <h2 id="doc-preview-title" style="font-size:16.5px">${esc(title || 'Live View Dokumen Riset')}</h2>
+              <p class="mu" style="font-size:12px;margin:2px 0 0">Pratinjau langsung berkas yang tersimpan pada Google Drive terintegrasi.</p>
+            </div>
+            <button type="button" class="btn sm" data-a="mclose" aria-label="Tutup pratinjau dokumen" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
+          <div class="live-pdf-wrap" style="margin-top:0">
+            <iframe class="live-pdf-frame lg" src="${esc(embedUrl)}" title="Live View ${esc(title || 'Dokumen')}"></iframe>
+          </div>
+          <div class="act" style="margin-top:14px">
+            ${folderUrl ? `<a class="btn" href="${esc(folderUrl)}" target="_blank" rel="noopener">${SVG.folder} Buka Folder Drive</a>` : ''}
+            ${url ? `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">${SVG.ext} Buka Tab Baru</a>` : ''}
+            <button type="button" class="btn pri" data-a="mclose">Tutup</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
   const FULL_WIDTH_FIELDS = new Set([
     'judul', 'nama', 'link', 'thumbnail', 'bidang', 'kolaborator', 'scope', 'catatan',
     'id_penelitian', 'id_jurnal', 'link_berkas', 'link_pdf', 'link_feedback', 'link_final', 'tampil_publik'
@@ -2114,6 +2235,23 @@
                 if (ent === 'Penelitian' && f[0] === 'kolaborator') {
                   ctl += `<div id="pen-kolab-picker" class="rumpun-box"></div>`;
                 }
+                if (ent === 'Penelitian' && f[0] === 'link_pdf') {
+                  ctl += `
+                    <div class="rumpun-box" style="margin-top:8px">
+                      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                        <div>
+                          <b style="color:var(--pri);font-size:12px;display:block">Upload Berkas Langsung ke Google Drive SIMPEN</b>
+                          <span class="mu" id="drive-upload-status" style="font-size:11.5px">Tersimpan otomatis di folder 📂 Uploads (satu lokasi dengan Database Spreadsheet) &amp; mengisi tautan Folder + PDF.</span>
+                        </div>
+                        <div>
+                          <input type="file" id="pen_drive_file" accept=".pdf,.doc,.docx" style="display:none">
+                          <button type="button" class="btn pri sm" id="btn-drive-upload" data-a="pickDriveFile">${SVG.upload} Upload Berkas ke Drive</button>
+                        </div>
+                      </div>
+                      <div id="pen-inline-preview"></div>
+                    </div>
+                  `;
+                }
                 if (ent === 'Jurnal' && f[0] === 'rumpun_ilmu') {
                   ctl += `<div class="chip-list" style="margin-top:6px">${RUMPUN_PAKAR.map(r => `<button type="button" class="pick-chip" data-a="pickJurRumpun" data-val="${esc(r.nama)}" style="font-size:11px;padding:3px 9px">${r.no}. ${esc(r.nama)}</button>`).join('')}</div>`;
                 }
@@ -2149,7 +2287,10 @@
       setTimeout(updateSubmissionKumInForm, 30);
     }
     if (ent === 'Penelitian') {
-      setTimeout(updatePenelitianRumpunUI, 20);
+      setTimeout(() => {
+        updatePenelitianRumpunUI();
+        updatePenelitianDrivePreview();
+      }, 20);
     }
   }
 
@@ -3286,6 +3427,13 @@
       const rEl = $('#mf [name=rumpun_ilmu]');
       if (rEl && t.dataset.val) rEl.value = t.dataset.val;
     }
+    else if (a === 'pickDriveFile') {
+      const inp = $('#pen_drive_file');
+      if (inp) inp.click();
+    }
+    else if (a === 'previewDoc') {
+      openDocPreviewModal(t.dataset.url || '', t.dataset.title || '', t.dataset.folder || '');
+    }
     else if (a === 'edit') openForm(ent, S.D[ent].find(x => x.id === id));
     else if (a === 'cite') openCiteModal(id);
     else if (a === 'followup') openFollowupModal(id);
@@ -3478,6 +3626,10 @@
       };
       reader.readAsText(t.files[0]);
     }
+    else if (t.id === 'pen_drive_file' && t.files && t.files[0]) {
+      uploadPenelitianFileToDrive(t.files[0]);
+      t.value = '';
+    }
     else if (t.id && t.id.startsWith('f_')) { S.f[t.id.slice(2)] = t.value; S.pubJurPage = 1; draw(); }
     else if (t.id === 'yr') { S.yr = t.value; draw(); }
     else if (t.id === 'jb') { S.jbiaya = t.value; S.adminJurPage = 1; draw(); }
@@ -3520,6 +3672,8 @@
       checkSubmissionDuplicateLive(t);
     } else if (t.form && t.form.id === 'mf' && t.form.dataset.e === 'Penelitian' && ['bidang', 'kolaborator'].includes(t.name)) {
       updatePenelitianRumpunUI();
+    } else if (t.name === 'link_pdf' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Penelitian') {
+      updatePenelitianDrivePreview();
     } else if (t.form && t.form.id === 'mf' && t.form.dataset.e === 'Submission' && ['id_jurnal', 'peran_penulis', 'total_penulis'].includes(t.name)) {
       updateSubmissionKumInForm();
     }
