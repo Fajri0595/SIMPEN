@@ -122,7 +122,7 @@
     const p = sessionStorage.getItem('sp_admin_page');
     return ['dash', 'pen', 'jur', 'sub', 'cfp', 'set'].includes(p) ? p : 'dash';
   })();
-  const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, pubErr: '', q: '', yr: '', jq: '', jbiaya: '', subFilter: 'all', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid', pubJurPage: 1, pubJurPerPage: 12, adminJurPage: 1, adminJurPerPage: 10 };
+  const S = { view: 'pub', tab: 'pub', page: initialAdminPage, P: null, D: null, pubErr: '', q: '', yr: '', jq: '', jbiaya: '', penRumpun: '', subFilter: 'all', onlyCheck: false, f: { kampus: '', akr: '', biaya: '', rumpun: '' }, jview: 'grid', pubJurPage: 1, pubJurPerPage: 12, adminJurPage: 1, adminJurPerPage: 10 };
   const ENT_LABEL = { Penelitian: 'Proyek Riset', Jurnal: 'Jurnal Sasaran', Submission: 'Artikel & Publikasi', CFP: 'Call for Papers (CFP)' };
 
   function buildSemesterList() {
@@ -155,6 +155,73 @@
     ['Penulis Korespondensi', 'Penulis Korespondensi (Porsi 40%)'],
     ['Penulis Anggota', 'Penulis Anggota (Porsi 40% dibagi anggota)']
   ];
+
+  const PENELITI_UTAMA = 'Ahmad Fajri Fadhili, S.Hum., M.Pd';
+  const RUMPUN_PAKAR = [
+    {
+      no: 1,
+      nama: 'Ilmu Linguistik',
+      intiFajri: true,
+      materi: 'Ilmu linguistik umum, psikolinguistik dan sosiolinguistik',
+      topik: ['Ilmu Linguistik Umum', 'Psikolinguistik', 'Sosiolinguistik'],
+      pakarUtama: ['Dr. Abdul Kirom, M.Pd.', 'Bidari, M.Pd.'],
+      kolaborator: ['Dr. Abdul Kirom, M.Pd.', 'Bidari, M.Pd.', 'Luthfatul Qibtiyah, S.Hum., M.Pd.I.']
+    },
+    {
+      no: 2,
+      nama: "Bahasa Arab 'Ammiyah, Ilmu Dilalah dan Manajemen Pariwisata, Umroh & Haji",
+      intiFajri: true,
+      materi: "Bahasa Arab 'ammiyah dan muhadatsah pariwisata dan manajemen pariwisata, umroh dan haji. Arabiyah lil Aghradl Al-Khasshah dan Ilmu Al-Dilalah wal Ma'ajim",
+      topik: ["Bahasa Arab 'Ammiyah", 'Muhadatsah & Manajemen Pariwisata, Umroh & Haji', 'Arabiyah lil Aghradl Al-Khasshah', "Ilmu Al-Dilalah wal Ma'ajim"],
+      pakarUtama: ['H. Saiful Anam, Lc., M.Pd.I.', 'Dr. Yusfar Ramadhan, S.Hum., M.Pd.I.'],
+      kolaborator: ['H. Saiful Anam, Lc., M.Pd.I.', 'Dr. Yusfar Ramadhan, S.Hum., M.Pd.I.', 'Dewi Nurhayati, S.S., M.Pd.']
+    },
+    {
+      no: 3,
+      nama: 'Manajemen, Metode dan Strategi Pembelajaran Bahasa Arab',
+      intiFajri: true,
+      materi: 'Perencanaan pembelajaran, evaluasi pembelajaran, pengembangan bahan ajar BA, psikologi belajar BA, metodologi & strategi pembelajaran BA',
+      topik: ['Perencanaan Pembelajaran BA', 'Evaluasi Pembelajaran BA', 'Pengembangan Bahan Ajar BA', 'Psikologi Belajar BA', 'Metodologi & Strategi Pembelajaran BA'],
+      pakarUtama: ['Ainul Yakin, M.Pd.I.', 'Dr. Izzat Amini, M.Pd.'],
+      kolaborator: ['Ainul Yakin, M.Pd.I.', 'Dr. Izzat Amini, M.Pd.', 'Uswatun Hasanah, M.A.', 'Dr. Yusfar Ramadhan, S.Hum., M.Pd.I.']
+    },
+    {
+      no: 4,
+      nama: 'Rumpun Sintaksis, Morfologi dan Fonologi dan Semantik',
+      intiFajri: false,
+      materi: "Muthala'ah, Nahwu, Shorrof, Balaghah, tarjamah",
+      topik: ["Muthala'ah", 'Nahwu', 'Shorrof', 'Balaghah', 'Tarjamah'],
+      pakarUtama: ['Bastami, M.Pd.', 'Uswatun Hasanah, M.A.'],
+      kolaborator: ['Bastami, M.Pd.', 'Uswatun Hasanah, M.A.', 'Dr. Umar Bukhory, M.Ag.', 'Bidari, M.Pd.']
+    },
+    {
+      no: 5,
+      nama: 'Keterampilan Bahasa',
+      intiFajri: true,
+      materi: "Maharah Istima', maharah kalam, maharah qira'ah dan maharah kitabah",
+      topik: ["Maharah Istima'", 'Maharah Kalam', "Maharah Qira'ah", 'Maharah Kitabah'],
+      pakarUtama: ['Dr. Yusfar Ramadhan, S.Hum., M.Pd.I.', 'Dr. Abdul Kirom, M.Pd.'],
+      kolaborator: ['Dr. Yusfar Ramadhan, S.Hum., M.Pd.I.', 'Dr. Abdul Kirom, M.Pd.', 'Dewi Nurhayati, S.S., M.Pd.', 'H. Saiful Anam, Lc., M.Pd.I.']
+    }
+  ];
+  const ALL_KOLAB_PAKAR = [...new Set(RUMPUN_PAKAR.flatMap(r => r.kolaborator))];
+
+  function findRumpunByBidang(val) {
+    const s = String(val || '').trim().toLowerCase();
+    if (!s) return null;
+    return RUMPUN_PAKAR.find(r => {
+      const rName = r.nama.toLowerCase();
+      if (s === rName || s.startsWith(rName) || rName.includes(s)) return true;
+      return r.topik.some(t => s.includes(t.toLowerCase()));
+    }) || null;
+  }
+
+  function parseKolabList(raw) {
+    return String(raw || '')
+      .split(/[;\n]+/)
+      .map(x => x.trim())
+      .filter(x => x && !/^mandiri$/i.test(x));
+  }
 
   const cfg = () => Object.assign({
     nama: '', afiliasi: '', wa: '', foto: '', link_sinta: '', link_scholar: '', link_scopus: '',
@@ -1112,6 +1179,7 @@
           : `Pengingat WhatsApp siap dikirim ke <b>${esc(c.wa)}</b> sesuai jadwal harian (${esc(c.jam || '08:00')} WIB). Belum ada riwayat pengiriman.`);
 
     return head('Dashboard Ringkasan', 'Kondisi riil proyek riset, progres artikel jurnal, dan target deadline naskah', `
+      <button type="button" class="btn" data-a="openRumpun">${SVG.user} Matriks Rumpun &amp; Pakar</button>
       <button type="button" class="btn" data-a="pdfBkd">${SVG.print} Cetak Rekap BKD</button>
       <button type="button" class="btn" data-a="add" data-e="Penelitian">${SVG.plus} Tambah Proyek Riset</button>
       <button type="button" class="btn pri" data-a="add" data-e="Submission">${SVG.plus} Tambah Artikel Jurnal</button>
@@ -1250,28 +1318,41 @@
   };
 
   function pPen() {
-    const q = S.q.toLowerCase().trim(), L = S.D.Penelitian.filter(p => matchFields([p.judul, p.bidang, p.kolaborator, p.status, p.semester_bkd], q));
-    return head('Proyek Riset (Hibah / Mandiri)', 'Kelola kegiatan penelitian, anggota tim, serta berkas proposal & laporan akhir di Google Drive', `
+    const q = S.q.toLowerCase().trim();
+    const L = S.D.Penelitian.filter(p => {
+      const mRumpun = findRumpunByBidang(p.bidang);
+      const okRumpun = !S.penRumpun || (mRumpun && mRumpun.nama === S.penRumpun) || p.bidang === S.penRumpun;
+      return okRumpun && matchFields([p.judul, p.bidang, p.kolaborator, p.status, p.semester_bkd], q);
+    });
+    const leadName = cfg().nama || PENELITI_UTAMA;
+    return head('Proyek Riset (Hibah / Mandiri)', 'Kelola kegiatan penelitian dengan ' + esc(PENELITI_UTAMA) + ' sebagai Peneliti Utama dan dosen pakar se-rumpun sebagai kolaborator', `
+      <button type="button" class="btn" data-a="openRumpun">${SVG.user} Matriks Rumpun &amp; Pakar</button>
       <button type="button" class="btn" data-a="csv" data-e="Penelitian">${SVG.download} Ekspor Excel</button>
       <button type="button" class="btn pri" data-a="add" data-e="Penelitian">${SVG.plus} Tambah Proyek Riset</button>
     `) + `
       <div class="workflow-hint">
         ${SVG.info}
         <div>
-          <b>Kapan menggunakan menu Proyek Riset?</b> Gunakan menu ini untuk mencatat <b>kegiatan penelitian</b> (proposal, laporan kemajuan/akhir, dan folder berkas Drive). Jika riset ini menghasilkan naskah artikel untuk dikirim ke jurnal (OJS) dan dihitung KUM-nya, klik tombol <b>+ Buat Artikel</b> pada baris riset di bawah.
+          <b>Pemetaan Rumpun Keilmuan Prodi PBA:</b> Peneliti Utama dikhususkan atas nama <b>${esc(leadName)}</b> (pakar inti pada Rumpun #1, #2, #3, dan #5). Pilih Rumpun saat menambah riset agar kolaborator pakar disarankan otomatis, atau klik <b>+ Buat Artikel</b> untuk mengirim luarannya ke jurnal.
         </div>
       </div>
-      <div class="input-icon-wrap" style="margin-bottom:16px">
-        ${SVG.search}
-        <input class="in" id="q" aria-label="Cari judul riset, bidang, atau kolaborator" placeholder="Cari judul riset, bidang, atau kolaborator…" value="${esc(S.q)}">
+      <div class="toolbar-unified" style="padding:10px 14px">
+        <div class="input-icon-wrap" style="flex:1;min-width:220px">
+          ${SVG.search}
+          <input class="in" id="q" aria-label="Cari judul riset, bidang, atau kolaborator" placeholder="Cari judul riset, rumpun, atau kolaborator…" value="${esc(S.q)}">
+        </div>
+        <select id="pen_rumpun" aria-label="Filter Rumpun Keilmuan" style="width:auto;max-width:340px">
+          <option value="">Semua Rumpun Keilmuan (${RUMPUN_PAKAR.length})</option>
+          ${RUMPUN_PAKAR.map(r => `<option value="${esc(r.nama)}" ${S.penRumpun === r.nama ? 'selected' : ''}>${r.no}. ${esc(r.nama)}</option>`).join('')}
+        </select>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Judul Proyek Riset</th>
-              <th>Bidang &amp; Mulai</th>
-              <th>Tim Kolaborator</th>
+              <th>Rumpun / Bidang &amp; Mulai</th>
+              <th>Peneliti Utama &amp; Kolaborator</th>
               <th>Status Riset</th>
               <th>Luaran Artikel</th>
               <th>Publik</th>
@@ -1281,6 +1362,8 @@
           <tbody>
             ${L.map(p => {
               const nArt = S.D.Submission.filter(s => s.id_penelitian === p.id).length;
+              const rm = findRumpunByBidang(p.bidang);
+              const kolabs = parseKolabList(p.kolaborator);
               return `
               <tr>
                 <td>
@@ -1289,9 +1372,15 @@
                 </td>
                 <td>
                   <div>${esc(p.bidang || '-')}</div>
-                  <small class="mu">${fmt(p.tanggal_mulai)}</small>
+                  ${rm ? `<div style="margin-top:3px"><span class="bd ${rm.intiFajri ? 'bl' : 'sl'}" style="font-size:10.5px">Rumpun #${rm.no} · ${rm.intiFajri ? 'Inti Peneliti' : 'Lintas Rumpun'}</span></div>` : ''}
+                  <small class="mu" style="display:block;margin-top:2px">${fmt(p.tanggal_mulai)}</small>
                 </td>
-                <td>${esc(p.kolaborator || 'Mandiri')}</td>
+                <td>
+                  <div style="font-size:11.5px;color:var(--pri);font-weight:700">Ketua: ${esc(leadName)}</div>
+                  ${kolabs.length
+                    ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${kolabs.map(k => `<span class="bd sl" style="font-size:10.5px">${esc(k)}</span>`).join('')}</div>`
+                    : '<span class="mu" style="font-size:11.5px;display:block;margin-top:2px">Mandiri (Tanpa Kolaborator)</span>'}
+                </td>
                 <td><span class="bd ${p.status === 'Selesai' ? 'gr' : p.status === 'Berjalan' ? 'am' : 'sl'}">${esc(p.status)}</span></td>
                 <td><span class="bd ${nArt ? 'bl' : 'sl'}">${nArt} artikel</span></td>
                 <td><span class="bd ${p.tampil_publik ? 'gr' : 'sl'}">${p.tampil_publik ? 'Tampil' : 'Privat'}</span></td>
@@ -1304,7 +1393,7 @@
                   </div>
                 </td>
               </tr>
-            `;}).join('') || '<tr><td colspan="7" class="mu" style="text-align:center;padding:28px">Belum ada data proyek riset. Klik "Tambah Proyek Riset" di kanan atas untuk memulai.</td></tr>'}
+            `;}).join('') || '<tr><td colspan="7" class="mu" style="text-align:center;padding:28px">Belum ada data proyek riset sesuai filter. Klik "Tambah Proyek Riset" di kanan atas untuk memulai.</td></tr>'}
           </tbody>
         </table>
       </div>
@@ -1910,8 +1999,80 @@
     `;
   }
 
+  function updatePenelitianRumpunUI() {
+    const f = $('#mf');
+    if (!f || f.dataset.e !== 'Penelitian') return;
+    const bidangEl = f.querySelector('[name=bidang]');
+    const kolabEl = f.querySelector('[name=kolaborator]');
+    const rumpunBox = $('#pen-rumpun-picker');
+    const kolabBox = $('#pen-kolab-picker');
+    const curBidang = bidangEl ? bidangEl.value : '';
+    const matched = findRumpunByBidang(curBidang);
+    const selectedKolabs = parseKolabList(kolabEl ? kolabEl.value : '');
+    const leadName = cfg().nama || PENELITI_UTAMA;
+
+    if (rumpunBox) {
+      rumpunBox.innerHTML = `
+        <div style="font-weight:700;color:var(--pri);font-size:12px">Pilih Rumpun Keilmuan Prodi PBA (Klik 1x untuk mengisi):</div>
+        <div class="chip-list">
+          ${RUMPUN_PAKAR.map(r => `
+            <button type="button" class="pick-chip ${matched && matched.no === r.no ? 'on' : ''}" data-a="pickRumpun" data-val="${esc(r.nama)}">
+              <span>${r.no}. ${esc(r.nama)}</span>
+              <span class="pakar-tag">${r.intiFajri ? 'Inti' : 'Lintas'}</span>
+            </button>
+          `).join('')}
+        </div>
+        ${matched ? `
+          <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--bd)">
+            <div style="font-size:11.5px;color:var(--tx-sec)"><b>Cakupan Materi Rumpun #${matched.no}:</b> ${esc(matched.materi)}</div>
+            <div class="chip-list">
+              ${matched.topik.map(t => {
+                const topicVal = `${matched.nama} (${t})`;
+                return `<button type="button" class="pick-chip ${curBidang.toLowerCase().includes(t.toLowerCase()) ? 'on' : ''}" data-a="pickMateriTopic" data-val="${esc(topicVal)}" style="font-size:11px;padding:3px 9px">${esc(t)}</button>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    if (kolabBox) {
+      const renderChip = name => {
+        const isOn = selectedKolabs.some(x => x.toLowerCase() === name.toLowerCase());
+        const isPakarUtama = matched && matched.pakarUtama.includes(name);
+        return `
+          <button type="button" class="pick-chip ${isOn ? 'on' : ''}" data-a="toggleKolab" data-name="${esc(name)}">
+            <span>${esc(name)}</span>
+            ${isPakarUtama ? '<span class="pakar-tag">Pakar Utama</span>' : ''}
+          </button>
+        `;
+      };
+      const otherLecturers = matched ? ALL_KOLAB_PAKAR.filter(n => !matched.kolaborator.includes(n)) : [];
+      kolabBox.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div style="font-size:12px"><b style="color:var(--pri)">Peneliti Utama:</b> ${esc(leadName)}</div>
+          ${selectedKolabs.length ? `<button type="button" class="btn sm" data-a="clearKolab" style="min-height:26px;padding:2px 8px;font-size:11px">Set Riset Mandiri</button>` : '<span class="bd sl" style="font-size:10.5px">Mode Mandiri</span>'}
+        </div>
+        <div style="margin-top:8px">
+          <div style="font-weight:700;font-size:11.5px;color:var(--tx-sec)">
+            ${matched ? `Rekomendasi Kolaborator Pakar Se-Rumpun (${esc(matched.nama)}):` : 'Pilih Dosen Pakar sebagai Kolaborator:'}
+          </div>
+          <div class="chip-list">
+            ${(matched ? matched.kolaborator : ALL_KOLAB_PAKAR).map(renderChip).join('')}
+          </div>
+        </div>
+        ${otherLecturers.length ? `
+          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--bd)">
+            <div style="font-weight:600;font-size:11px;color:var(--mu)">Kolaborator Lintas Rumpun Lainnya:</div>
+            <div class="chip-list">${otherLecturers.map(renderChip).join('')}</div>
+          </div>
+        ` : ''}
+      `;
+    }
+  }
+
   const FULL_WIDTH_FIELDS = new Set([
-    'judul', 'nama', 'link', 'thumbnail', 'kolaborator', 'scope', 'catatan',
+    'judul', 'nama', 'link', 'thumbnail', 'bidang', 'kolaborator', 'scope', 'catatan',
     'id_penelitian', 'id_jurnal', 'link_berkas', 'link_pdf', 'link_feedback', 'link_final', 'tampil_publik'
   ]);
 
@@ -1947,6 +2108,15 @@
                   return `<div class="${wrapCls}"><label for="${fid}" style="font-weight:600;display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer"><input type="checkbox" ${n} ${rec[f[0]] ? 'checked' : ''}> ${f[1]}</label></div>`;
                 }
                 let ctl = f[2] === 'textarea' ? `<textarea ${n}>${esc(v)}</textarea>` : f[2] === 'select' ? `<select ${n}>${opts(f, v)}</select>` : `<input class="in" ${n} type="${f[2]}" value="${esc(v)}">`;
+                if (ent === 'Penelitian' && f[0] === 'bidang') {
+                  ctl += `<div id="pen-rumpun-picker" class="rumpun-box"></div>`;
+                }
+                if (ent === 'Penelitian' && f[0] === 'kolaborator') {
+                  ctl += `<div id="pen-kolab-picker" class="rumpun-box"></div>`;
+                }
+                if (ent === 'Jurnal' && f[0] === 'rumpun_ilmu') {
+                  ctl += `<div class="chip-list" style="margin-top:6px">${RUMPUN_PAKAR.map(r => `<button type="button" class="pick-chip" data-a="pickJurRumpun" data-val="${esc(r.nama)}" style="font-size:11px;padding:3px 9px">${r.no}. ${esc(r.nama)}</button>`).join('')}</div>`;
+                }
                 if (ent === 'Jurnal' && f[0] === 'nama') {
                   ctl += `<div id="jurnal-dup-notice" class="dup-notice"></div>`;
                 }
@@ -1977,6 +2147,9 @@
     `);
     if (ent === 'Submission') {
       setTimeout(updateSubmissionKumInForm, 30);
+    }
+    if (ent === 'Penelitian') {
+      setTimeout(updatePenelitianRumpunUI, 20);
     }
   }
 
@@ -2970,6 +3143,61 @@
     toast(`Berhasil mengimpor ${newSubs.length} artikel dari BibTeX`);
   }
 
+  function openRumpunModal() {
+    const pens = S.D?.Penelitian || [];
+    const leadName = cfg().nama || PENELITI_UTAMA;
+    openModal(`
+      <div class="ov">
+        <div class="mod" role="dialog" aria-modal="true" aria-labelledby="rumpun-title" style="max-width:740px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+            <div>
+              <h2 id="rumpun-title" style="font-size:18px">Matriks Rumpun Keilmuan &amp; Pakar Kolaborator (Prodi PBA)</h2>
+              <p class="mu" style="font-size:12.5px;margin:2px 0 0">Pemetaan bidang keahlian riset dengan <b>${esc(leadName)}</b> sebagai Peneliti Utama.</p>
+            </div>
+            <button type="button" class="btn sm" data-a="mclose" aria-label="Tutup matriks rumpun" style="border:none;background:transparent;font-size:18px">✕</button>
+          </div>
+          <div class="workflow-hint" style="margin-bottom:14px">
+            ${SVG.user}
+            <div>
+              <b>Peneliti Utama:</b> ${esc(leadName)} · <b>4 Rumpun Inti</b> (#1, #2, #3, #5) &amp; <b>1 Rumpun Lintas Kolaborasi</b> (#4). Klik tombol buat riset pada salah satu rumpun untuk memulai proyek riset terstruktur.
+            </div>
+          </div>
+          <div style="max-height:56vh;overflow-y:auto;padding-right:4px">
+            ${RUMPUN_PAKAR.map(r => {
+              const count = pens.filter(p => findRumpunByBidang(p.bidang)?.no === r.no).length;
+              return `
+                <div class="rumpun-card ${r.intiFajri ? 'inti' : ''}">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+                    <b style="font-size:14px;color:var(--tx)">${r.no}. ${esc(r.nama)}</b>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                      <span class="bd ${r.intiFajri ? 'gr' : 'sl'}">${r.intiFajri ? 'Rumpun Inti Peneliti Utama' : 'Lintas Rumpun'}</span>
+                      <span class="bd bl">${count} Riset</span>
+                    </div>
+                  </div>
+                  <div class="mu" style="font-size:12.5px;margin:6px 0 10px"><b>Cakupan Materi:</b> ${esc(r.materi)}</div>
+                  <div style="font-size:12px;margin-bottom:10px">
+                    <b style="display:block;margin-bottom:4px;color:var(--tx-sec)">Tim Kolaborator Pakar Se-Rumpun:</b>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                      ${r.intiFajri ? `<span class="bd gr">${esc(leadName)} (Peneliti Utama)</span>` : `<span class="bd am">${esc(leadName)} (Peneliti Utama / Lintas Rumpun)</span>`}
+                      ${r.kolaborator.map(k => {
+                        const isPakar = r.pakarUtama.includes(k);
+                        return `<span class="bd ${isPakar ? 'bl' : 'sl'}">${esc(k)}${isPakar ? ' (Pakar Utama)' : ''}</span>`;
+                      }).join('')}
+                    </div>
+                  </div>
+                  <button type="button" class="btn pri sm" data-a="addPenRumpun" data-id="${r.no}">${SVG.plus} Buat Proyek Riset di Rumpun Ini</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="act">
+            <button type="button" class="btn" data-a="mclose">Tutup</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
   document.addEventListener('click', async e => {
     if (e.target && e.target.classList && e.target.classList.contains('ov')) {
       // Jangan tutup modal form input jika pengguna tidak sengaja mengklik area luar
@@ -3011,6 +3239,53 @@
       if (j) openJournalDetail(j);
     }
     else if (a === 'add') openForm(ent, ent === 'Submission' ? { status: 'Draft', semester_bkd: currentSemester(), tgl_cek: today(), tampil_publik: true } : { tampil_publik: true });
+    else if (a === 'openRumpun') openRumpunModal();
+    else if (a === 'addPenRumpun') {
+      const r = RUMPUN_PAKAR.find(x => String(x.no) === String(id));
+      if (r) {
+        closeModal();
+        S.page = 'pen';
+        sessionStorage.setItem('sp_admin_page', 'pen');
+        draw();
+        openForm('Penelitian', {
+          bidang: r.nama,
+          status: 'Draft',
+          semester_bkd: currentSemester(),
+          tanggal_mulai: today(),
+          tampil_publik: true
+        });
+      }
+    }
+    else if (a === 'pickRumpun' || a === 'pickMateriTopic') {
+      const bEl = $('#mf [name=bidang]');
+      if (bEl && t.dataset.val) {
+        bEl.value = t.dataset.val;
+        updatePenelitianRumpunUI();
+      }
+    }
+    else if (a === 'toggleKolab') {
+      const kEl = $('#mf [name=kolaborator]');
+      const name = t.dataset.name || '';
+      if (kEl && name) {
+        const list = parseKolabList(kEl.value);
+        const idx = list.findIndex(x => x.toLowerCase() === name.toLowerCase());
+        if (idx >= 0) list.splice(idx, 1);
+        else list.push(name);
+        kEl.value = list.join('; ');
+        updatePenelitianRumpunUI();
+      }
+    }
+    else if (a === 'clearKolab') {
+      const kEl = $('#mf [name=kolaborator]');
+      if (kEl) {
+        kEl.value = '';
+        updatePenelitianRumpunUI();
+      }
+    }
+    else if (a === 'pickJurRumpun') {
+      const rEl = $('#mf [name=rumpun_ilmu]');
+      if (rEl && t.dataset.val) rEl.value = t.dataset.val;
+    }
     else if (a === 'edit') openForm(ent, S.D[ent].find(x => x.id === id));
     else if (a === 'cite') openCiteModal(id);
     else if (a === 'followup') openFollowupModal(id);
@@ -3075,6 +3350,9 @@
     else if (a === 'pen2sub') {
       const p = S.D.Penelitian.find(x => x.id === id);
       if (p) {
+        const kolabs = parseKolabList(p.kolaborator);
+        const totalPenulis = 1 + kolabs.length;
+        const peran = kolabs.length > 0 ? 'Penulis Pertama & Korespondensi' : 'Penulis Tunggal';
         S.page = 'sub';
         S.subFilter = 'all';
         sessionStorage.setItem('sp_admin_page', 'sub');
@@ -3082,7 +3360,10 @@
         openForm('Submission', {
           id_penelitian: p.id,
           judul: p.judul,
-          semester_bkd: p.semester_bkd || '',
+          semester_bkd: p.semester_bkd || currentSemester(),
+          peran_penulis: peran,
+          total_penulis: totalPenulis,
+          catatan: kolabs.length ? `Peneliti Utama: ${cfg().nama || PENELITI_UTAMA} | Kolaborator: ${kolabs.join('; ')}` : '',
           status: 'Draft',
           tgl_cek: today(),
           tampil_publik: true
@@ -3200,6 +3481,7 @@
     else if (t.id && t.id.startsWith('f_')) { S.f[t.id.slice(2)] = t.value; S.pubJurPage = 1; draw(); }
     else if (t.id === 'yr') { S.yr = t.value; draw(); }
     else if (t.id === 'jb') { S.jbiaya = t.value; S.adminJurPage = 1; draw(); }
+    else if (t.id === 'pen_rumpun') { S.penRumpun = t.value; draw(); }
     else if (t.id === 'oc') { S.onlyCheck = t.checked; draw(); }
     else if (t.id === 'pub_perpage') { S.pubJurPerPage = Number(t.value) || 12; S.pubJurPage = 1; draw(); }
     else if (t.id === 'admin_perpage') { S.adminJurPerPage = Number(t.value) || 10; S.adminJurPage = 1; draw(); }
@@ -3236,6 +3518,8 @@
       checkJournalDuplicateLive(t);
     } else if (t.name === 'judul' && t.form && t.form.id === 'mf' && t.form.dataset.e === 'Submission') {
       checkSubmissionDuplicateLive(t);
+    } else if (t.form && t.form.id === 'mf' && t.form.dataset.e === 'Penelitian' && ['bidang', 'kolaborator'].includes(t.name)) {
+      updatePenelitianRumpunUI();
     } else if (t.form && t.form.id === 'mf' && t.form.dataset.e === 'Submission' && ['id_jurnal', 'peran_penulis', 'total_penulis'].includes(t.name)) {
       updateSubmissionKumInForm();
     }
